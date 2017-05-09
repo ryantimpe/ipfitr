@@ -4,8 +4,9 @@
 \alias{ip_fit}
 \title{Iterative proportional fitting to scale seed values to multiple target subtotals.}
 \usage{
-ip_fit(datatable, targets, target.value.names = "value", max.error = 0.01,
-  max.iterations = 25)
+ip_fit(datatable, targets, datatable.value.name = "value",
+  target.value.names = "value", max.error = 0.01, max.iterations = 25,
+  ice_cells = NULL, ice_cells.value.name = "value")
 }
 \arguments{
 \item{datatable}{A data frame of values to be scaled to targets.}
@@ -18,6 +19,13 @@ ip_fit(datatable, targets, target.value.names = "value", max.error = 0.01,
 Iterative scaling will complete once the error is below this threshold or \code{max.iterations} occur.}
 
 \item{max.iterations}{The maximum number of iterations of scaling. Iterative scaling with end once this value is reached, even if the error is above \code{max.error}.}
+
+\item{ice_cells}{Optional data frame of values with same series columns as \code{datatable}, specifying exact values to hit in the scaling.
+Any values not listed, or \code{NA}s, will be scaled as normal.}
+
+\item{ice_cells.value.name}{The name of the series of iced values in \code{ice_cells}.}
+
+\item{datatable.value.names}{The name of the series in \code{datatable} containing the values to be scaled.}
 }
 \value{
 A dataframe with the same dimensionality as \code{datatable}, with all values scaled to the subtotals specified in each data frame in \code{targets}.

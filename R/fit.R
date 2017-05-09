@@ -5,10 +5,14 @@
 #'
 #' @param datatable A data frame of values to be scaled to targets.
 #' @param targets A list of data frames containing subtotal targets for the \code{datatable}. All totals in each target should be equal.
+#' @param datatable.value.names The name of the series in \code{datatable} containing the values to be scaled.
 #' @param target.value.names The names of the series in \code{targets} containing subtotals to scale. Can be string or array of strings.
 #' @param max.error The maximum total absolute difference allowed between final scaled values and targets.
 #'     Iterative scaling will complete once the error is below this threshold or \code{max.iterations} occur.
 #' @param max.iterations The maximum number of iterations of scaling. Iterative scaling with end once this value is reached, even if the error is above \code{max.error}.
+#' @param ice_cells Optional data frame of values with same series columns as \code{datatable}, specifying exact values to hit in the scaling.
+#'    Any values not listed, or \code{NA}s, will be scaled as normal.
+#' @param ice_cells.value.name The name of the series of iced values in \code{ice_cells}.
 #' @return A dataframe with the same dimensionality as \code{datatable}, with all values scaled to the subtotals specified in each data frame in \code{targets}.
 #' @examples
 #' tar1 <- data.frame(x = letters[1:2], value = c(50, 50))
@@ -18,7 +22,9 @@
 #' tar.list <- list(tar1, tar2, tar3)
 #' df <- ip_create_seed(tar.list) %>% ip_fit(tar.list)
 
-ip_fit <- function(datatable, targets, target.value.names = "value", max.error = 0.01, max.iterations = 25) {
+ip_fit <- function(datatable, targets, datatable.value.name = "value", target.value.names = "value",
+                   max.error = 0.01, max.iterations = 25,
+                   ice_cells = NULL, ice_cells.value.name = "value") {
 
   #Warnings
   if(is.null(targets) | !is.list(targets) | length(targets) == 1) {stop("Targets must be a list of at least two data frames")}
@@ -27,17 +33,48 @@ ip_fit <- function(datatable, targets, target.value.names = "value", max.error =
   current.error     <- 10^9
   current.iteration <- 0
 
-  #Format targets
   tar.list <- targets
+  df0 <- datatable
+  names(df0)[names(df0) == datatable.value.name] <- "value"
+
+  #Freeze 1 - Ice Cells
+  if(!is.null(ice_cells)){
+    print(names(ice_cells))
+    names(ice_cells)[names(ice_cells) == ice_cells.value.name] <- "ice_c"
+
+    df0 <- df0 %>%
+      left_join(ice_cells) %>%
+      #Iced cells are not unknown, so we don't need to include them in the IPF
+      mutate(value = ifelse(is.na(ice_c), value, 0))
+
+    #Since we 0'd out the seed, we should also remove all the iced values from the targets
+    tar.list <- lapply(tar.list, function(x){
+      names(x)[names(x) %in% target.value.names] <- "value"
+
+      ice_target <- ice_cells %>%
+        group_by_(.dots = as.list(names(x)[!(names(x) == "value")])) %>%
+        summarize(iced = sum(ice_c, na.rm=T)) %>%
+        ungroup()
+
+      df <- x %>%
+        left_join(ice_target) %>%
+        mutate(iced = ifelse(is.na(iced), 0, iced)) %>%
+        mutate(value = value - iced) %>%
+        select(-iced)
+
+      return(df)
+    })
+  } #End ice cells
+
+  #Format targets - give each value unique names
   for( i in seq_along(tar.list)){
     x <- tar.list[[i]]
 
-    names(x)[names(x) %in% target.value.names] <- paste0("tar", i)
+    names(x)[names(x) == "value"] <- paste0("tar", i)
     names(tar.list[[i]]) <- names(x)
   }
 
   #Format input seed
-  df0 <- datatable
   for(x in tar.list){
     df0 <- df0 %>%
       left_join(x)
@@ -79,6 +116,13 @@ ip_fit <- function(datatable, targets, target.value.names = "value", max.error =
     df0 <- df1
 
     print(paste("Error: ", round(current.error, 4)))
+  }
+
+  #Freeze 1 - Iced Cells
+  #Add back Iced Cells
+  if(!is.null(ice_cells)){
+    df0 <- df0 %>%
+      mutate(value = ifelse(is.na(ice_c), value, ice_c))
   }
 
   return(df0)
