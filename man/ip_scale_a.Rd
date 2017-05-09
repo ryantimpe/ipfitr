@@ -2,13 +2,13 @@
 % Please edit documentation in R/scale.R
 \name{ip_scale_a}
 \alias{ip_scale_a}
-\title{Single target scale function using single dataframe.}
+\title{Single target scale function using single data frame.}
 \usage{
 ip_scale_a(datatable, target_series, series_start = "value",
   series_target = "tar1")
 }
 \arguments{
-\item{datatable}{A dataframe containing starting values and the target values.}
+\item{datatable}{A data frame containing starting values and the target values.}
 
 \item{target_series}{Subset of \code{names(datatable)} containing series with target subtotals.}
 
@@ -17,10 +17,10 @@ ip_scale_a(datatable, target_series, series_start = "value",
 \item{series_target}{The name of the series in \code{datatable} containing target subtotals.}
 }
 \value{
-A dataframe with the same dimensionality as \code{datatable}, with \code{series_start} scaled to the subtotals specified by \code{series_target} .
+A data frame with the same dimensionality as \code{datatable}, with \code{series_start} scaled to the subtotals specified by \code{series_target} .
 }
 \description{
-Single target scale function using single dataframe.
+Single target scale function using single data frame.
 Analogous to \code{ip_scale}.
 Primarily for use within other \code{ipfitr} functions to increase speed.
 }

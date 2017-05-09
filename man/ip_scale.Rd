@@ -26,5 +26,5 @@ df <- data.frame(x = rep(letters[1:2], 2), y = c(rep("c", 2), rep("d", 2)), valu
 tar1 <- data.frame(x = letters[1:2], value = c(20, 30))
 ip_scale(df, tar1)
 
-df \%>\% ip_scale(tar1, series_start = "count", series_target = "tar1")
+df \%>\% ip_scale(tar1, series_start = "value", series_target = "value")
 }

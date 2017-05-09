@@ -29,17 +29,17 @@ ip_scale <- function(datatable, target, series_start = "value", series_target = 
   return(datatable)
 }
 
-#' Single target scale function using single dataframe.
+#' Single target scale function using single data frame.
 #'
-#' Single target scale function using single dataframe.
+#' Single target scale function using single data frame.
 #' Analogous to \code{ip_scale}.
 #' Primarily for use within other \code{ipfitr} functions to increase speed.
 #'
-#' @param datatable A dataframe containing starting values and the target values.
+#' @param datatable A data frame containing starting values and the target values.
 #' @param target_series Subset of \code{names(datatable)} containing series with target subtotals.
 #' @param series_start The name of the series in \code{datatable} to be scaled to the \code{series_target}.
 #' @param series_target The name of the series in \code{datatable} containing target subtotals.
-#' @return A dataframe with the same dimensionality as \code{datatable}, with \code{series_start} scaled to the subtotals specified by \code{series_target} .
+#' @return A data frame with the same dimensionality as \code{datatable}, with \code{series_start} scaled to the subtotals specified by \code{series_target} .
 #' @examples
 #' ip_scale_a(df, c("series1", "series2"))
 #'
