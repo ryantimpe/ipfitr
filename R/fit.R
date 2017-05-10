@@ -18,6 +18,10 @@
 #'    Any rows or values not listed, or \code{NA}s, will be scaled as normal.
 #'    Using \code{ice_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.
 #' @param ice_slice.value.name The name or names of the series of iced values in \code{ice_slice}.
+#' @param slush_cells Optional data frame of values with same series columns as \code{datatable}, specifying bounded values to hit in the scaling.
+#'    Provide minimumn and maximum values for a cell to be scaled.
+#'    Any rows or values not listed, or \code{NA}s, will be scaled as normal.
+#' @param slush_cells.value.names An array of length 2 of the names of the minimum and maximum values in  \code{slush_cells}.
 #'
 #' @return A dataframe with the same dimensionality as \code{datatable}, with all values scaled to the subtotals specified in each data frame in \code{targets}.
 #' @examples
@@ -32,7 +36,8 @@ ip_fit <- function(datatable, targets,
                    datatable.value.name = "value", target.value.names = "value",
                    max.error = 0.01, max.iterations = 25,
                    ice_cells = NULL, ice_cells.value.name = "value",
-                   ice_slice = NULL, ice_slice.value.names = "value") {
+                   ice_slice = NULL, ice_slice.value.names = "value",
+                   slush_cells = NULL, slush_cells.value.names = c("value_min", "value_max")) {
 
   #Warnings
   if(is.null(targets) | !is.list(targets) | length(targets) == 1) {stop("Targets must be a list of at least two data frames")}
@@ -40,6 +45,7 @@ ip_fit <- function(datatable, targets,
   #Set initial conditions
   current.error     <- 10^9
   current.iteration <- 1
+  slush_cells.oob <- TRUE
 
   #Freeze 2 - Ice Slices
   if(!is.null(ice_slice)){
@@ -76,9 +82,20 @@ ip_fit <- function(datatable, targets,
         mutate(value = value - iced) %>%
         select(-iced)
 
+      if(any(df$value < 0)){stop("Iced cell values exceed supplied targets. Unable to rationalize.")}
+
       return(df)
     })
   } #End ice cells
+
+  #Freeze 3 - Slush Cells. Similar to Ice, but cells have a min/max bound, not specific value
+  if(!is.null(slush_cells)) {
+    names(slush_cells)[names(slush_cells) == slush_cells.value.names[1]] <- "slush_c_min"
+    names(slush_cells)[names(slush_cells) == slush_cells.value.names[2]] <- "slush_c_max"
+
+    df0 <- df0 %>%
+      left_join(slush_cells)
+  }
 
   #Format targets - give each value unique names
   for( i in seq_along(tar.list)){
@@ -94,8 +111,11 @@ ip_fit <- function(datatable, targets,
       left_join(x)
   }
 
-  while(current.error > max.error & current.iteration <= max.iterations ) {
+  while((current.error > max.error | slush_cells.oob == TRUE) & current.iteration <= max.iterations ) {
     print(paste("Iteration", current.iteration))
+
+    #Reset Freeze 3 - Slush Cells - to off
+    slush_cells.oob <- FALSE
 
     ##
     # Scaling
@@ -124,6 +144,34 @@ ip_fit <- function(datatable, targets,
     current.error <- sum(sapply(err.list, function(x){
       return(sum(abs(x$error), na.rm=T))
     }), na.rm=T)
+
+    ###
+    # Freeze 3 - Slush Cells
+    ###
+    #Similar to Ice, but cells have a min/max bound, not specific value
+    #Calculate AFTER error, as this is its own deal breaker. If everything is in bounds, no problem
+    if(!is.null(slush_cells)) {
+
+      df1 <- df1 %>%
+        mutate(check_slush_c = (value < slush_c_min) | (value > slush_c_max)) #Look for OOB
+
+      #If any of the bounded cells are OOB, first update the trigger to True
+      slush_cells.oob <- any(df0$check_slush_c, na.rm = T)
+
+      #Then replace those values with 1/3 closer above/below that missed bound
+      if(slush_cells.oob == TRUE) {
+        df1 <- df1 %>%
+          mutate(value = ifelse((value >= slush_c_min) | is.na(slush_c_min), value, slush_c_min + (1/3)*(slush_c_max - slush_c_min)),
+                 value = ifelse((value <= slush_c_max) | is.na(slush_c_max), value, slush_c_max - (1/3)*(slush_c_max - slush_c_min))
+          ) %>%
+          select(-check_slush_c)
+      }
+
+    }
+
+    ###
+    # Prepare for next loop
+    ###
 
     current.iteration <- current.iteration + 1
 

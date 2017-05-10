@@ -7,7 +7,8 @@
 ip_fit(datatable, targets, datatable.value.name = "value",
   target.value.names = "value", max.error = 0.01, max.iterations = 25,
   ice_cells = NULL, ice_cells.value.name = "value", ice_slice = NULL,
-  ice_slice.value.names = "value")
+  ice_slice.value.names = "value", slush_cells = NULL,
+  slush_cells.value.names = c("value_min", "value_max"))
 }
 \arguments{
 \item{datatable}{A data frame of values to be scaled to targets.}
@@ -34,6 +35,13 @@ Any rows or values not listed, or \code{NA}s, will be scaled as normal.
 Using \code{ice_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.}
 
 \item{ice_slice.value.name}{The name or names of the series of iced values in \code{ice_slice}.}
+
+\item{slush_cells}{Optional data frame of values with same series columns as \code{datatable}, specifying bounded values to hit in the scaling.
+Provide minimumn and maximum values for a cell to be scaled.
+Any rows or values not listed, or \code{NA}s, will be scaled as normal.}
+
+\item{slush_cells.value.names}{An array of length 2 of the names of the minimum and maximum values in  \code{slush_cells}.}
+
 }
 \value{
 A dataframe with the same dimensionality as \code{datatable}, with all values scaled to the subtotals specified in each data frame in \code{targets}.
