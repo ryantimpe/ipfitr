@@ -153,18 +153,19 @@ ip_fit <- function(datatable, targets,
     if(!is.null(slush_cells)) {
 
       df1 <- df1 %>%
-        mutate(check_slush_c = (value < slush_c_min) | (value > slush_c_max)) #Look for OOB
+        mutate(check_slush_c = (value < slush_c_min) | (value > slush_c_max))  #Look for OOB
 
       #If any of the bounded cells are OOB, first update the trigger to True
-      slush_cells.oob <- any(df0$check_slush_c, na.rm = T)
+      slush_cells.oob <- any(df1$check_slush_c, na.rm = T)
+      df1$check_slush_c <- NULL
 
       #Then replace those values with 1/3 closer above/below that missed bound
       if(slush_cells.oob == TRUE) {
+        print("Out of bounds conditions present for slush_cells.")
         df1 <- df1 %>%
           mutate(value = ifelse((value >= slush_c_min) | is.na(slush_c_min), value, slush_c_min + (1/3)*(slush_c_max - slush_c_min)),
                  value = ifelse((value <= slush_c_max) | is.na(slush_c_max), value, slush_c_max - (1/3)*(slush_c_max - slush_c_min))
-          ) %>%
-          select(-check_slush_c)
+          )
       }
 
     }
