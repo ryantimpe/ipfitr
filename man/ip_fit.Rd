@@ -41,6 +41,8 @@ Any rows or values not listed, or \code{NA}s, will be scaled as normal.}
 \item{datatable.value.names}{The name of the series in \code{datatable} containing the values to be scaled.}
 
 \item{ice_slice.value.name}{The name or names of the series of iced values in \code{ice_slice}.}
+
+\item{save.tars}{Retain all targets, ice, and slush values in output data frame.}
 }
 \value{
 A dataframe with the same dimensionality as \code{datatable}, with all values scaled to the subtotals specified in each data frame in \code{targets}.

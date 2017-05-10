@@ -37,7 +37,8 @@ ip_fit <- function(datatable, targets,
                    max.error = 0.01, max.iterations = 25,
                    ice_cells = NULL, ice_cells.value.name = "value",
                    ice_slice = NULL, ice_slice.value.names = "value",
-                   slush_cells = NULL, slush_cells.value.names = c("value_min", "value_max")) {
+                   slush_cells = NULL, slush_cells.value.names = c("value_min", "value_max"),
+                   save.tars = TRUE) {
 
   #Warnings
   if(is.null(targets) | !is.list(targets) | length(targets) == 1) {stop("Targets must be a list of at least two data frames")}
@@ -60,12 +61,12 @@ ip_fit <- function(datatable, targets,
   #Freeze 1 - Ice Cells
   if(!is.null(ice_cells)){
     print(names(ice_cells))
-    names(ice_cells)[names(ice_cells) == ice_cells.value.name] <- "ice_c"
+    names(ice_cells)[names(ice_cells) == ice_cells.value.name] <- "ice__c"
 
     df0 <- df0 %>%
       left_join(ice_cells) %>%
       #Iced cells are not unknown, so we don't need to include them in the IPF
-      mutate(value = ifelse(is.na(ice_c), value, 0))
+      mutate(value = ifelse(is.na(ice__c), value, 0))
 
     #Since we 0'd out the seed, we should also remove all the iced values from the targets
     tar.list <- lapply(tar.list, function(x){
@@ -73,7 +74,7 @@ ip_fit <- function(datatable, targets,
 
       ice_target <- ice_cells %>%
         group_by_(.dots = as.list(names(x)[!(names(x) == "value")])) %>%
-        summarize(iced = sum(ice_c, na.rm=T)) %>%
+        summarize(iced = sum(ice__c, na.rm=T)) %>%
         ungroup()
 
       df <- x %>%
@@ -90,8 +91,8 @@ ip_fit <- function(datatable, targets,
 
   #Freeze 3 - Slush Cells. Similar to Ice, but cells have a min/max bound, not specific value
   if(!is.null(slush_cells)) {
-    names(slush_cells)[names(slush_cells) == slush_cells.value.names[1]] <- "slush_c_min"
-    names(slush_cells)[names(slush_cells) == slush_cells.value.names[2]] <- "slush_c_max"
+    names(slush_cells)[names(slush_cells) == slush_cells.value.names[1]] <- "slush__c_min"
+    names(slush_cells)[names(slush_cells) == slush_cells.value.names[2]] <- "slush__c_max"
 
     df0 <- df0 %>%
       left_join(slush_cells)
@@ -101,7 +102,7 @@ ip_fit <- function(datatable, targets,
   for( i in seq_along(tar.list)){
     x <- tar.list[[i]]
 
-    names(x)[names(x) == "value"] <- paste0("tar", i)
+    names(x)[names(x) == "value"] <- paste0("tar__", i)
     names(tar.list[[i]]) <- names(x)
   }
 
@@ -125,7 +126,7 @@ ip_fit <- function(datatable, targets,
     for(i in seq_along(tar.list)){
       x <- tar.list[[i]]
       df1 <- df1 %>%
-        ip_scale_a(target_series = names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar", i))
+        ip_scale_a(target_series = names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__", i))
     }
 
     ###
@@ -137,7 +138,7 @@ ip_fit <- function(datatable, targets,
     err.list <- lapply(seq_along(head(tar.list, -1)), function(i){
       x <- tar.list[[i]]
       df1 %>%
-        ip_miss_a(names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar", i))
+        ip_miss_a(names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__", i))
     })
 
     #For each error df, sum the error column, then sum those sums for total abs error
@@ -153,7 +154,7 @@ ip_fit <- function(datatable, targets,
     if(!is.null(slush_cells)) {
 
       df1 <- df1 %>%
-        mutate(check_slush_c = (value < slush_c_min) | (value > slush_c_max))  #Look for OOB
+        mutate(check_slush_c = (value < slush__c_min) | (value > slush__c_max))  #Look for OOB
 
       #If any of the bounded cells are OOB, first update the trigger to True
       slush_cells.oob <- any(df1$check_slush_c, na.rm = T)
@@ -163,8 +164,8 @@ ip_fit <- function(datatable, targets,
       if(slush_cells.oob == TRUE) {
         print("Out of bounds conditions present for slush_cells.")
         df1 <- df1 %>%
-          mutate(value = ifelse((value >= slush_c_min) | is.na(slush_c_min), value, slush_c_min + (1/3)*(slush_c_max - slush_c_min)),
-                 value = ifelse((value <= slush_c_max) | is.na(slush_c_max), value, slush_c_max - (1/3)*(slush_c_max - slush_c_min))
+          mutate(value = ifelse((value >= slush__c_min) | is.na(slush__c_min), value, slush__c_min + (1/3)*(slush__c_max - slush__c_min)),
+                 value = ifelse((value <= slush__c_max) | is.na(slush__c_max), value, slush__c_max - (1/3)*(slush__c_max - slush__c_min))
           )
       }
 
@@ -185,7 +186,15 @@ ip_fit <- function(datatable, targets,
   #Add back Iced Cells
   if(!is.null(ice_cells)){
     df0 <- df0 %>%
-      mutate(value = ifelse(is.na(ice_c), value, ice_c))
+      mutate(value = ifelse(is.na(ice__c), value, ice__c))
+  }
+
+  #Save/print all the assumption columns?
+  # Currently, tars are reduced by Freeze tars.
+  # TODO: Add frozen values back into tars... or just replace tars. That's easier
+  if(!save.tars){
+    df0 <- df0 %>%
+      select(-starts_with("tar__"), -starts_with("ice__"), -starts_with("slush__"))
   }
 
   return(df0)
