@@ -22,7 +22,9 @@
 #'    Provide minimumn and maximum values for a cell to be scaled.
 #'    Any rows or values not listed, or \code{NA}s, will be scaled as normal.
 #' @param slush_cells.value.names An array of length 2 of the names of the minimum and maximum values in  \code{slush_cells}.
-#'
+#' @param sluch.inbounds.param Numeric value of  0 < x < 1. Following an out-of-bounds occurence for \code{slush_cells}, the \code{slush.inbounds.parm} is the additional value added to the scaled value to bring it back into bounds.
+#' Values close to 0 bind the value to the violated bound, while close to 1 bind the value to the other bound.
+#' Values closer to0 will require more iterations to complete.
 #' @return A dataframe with the same dimensionality as \code{datatable}, with all values scaled to the subtotals specified in each data frame in \code{targets}.
 #' @examples
 #' tar1 <- data.frame(x = letters[1:2], value = c(50, 50))
@@ -38,6 +40,7 @@ ip_fit <- function(datatable, targets,
                    ice_cells = NULL, ice_cells.value.name = "value",
                    ice_slice = NULL, ice_slice.value.names = "value",
                    slush_cells = NULL, slush_cells.value.names = c("value_min", "value_max"),
+                   slush.inbounds.parm = 1/3,
                    save.tars = TRUE) {
 
   #Warnings
@@ -164,8 +167,8 @@ ip_fit <- function(datatable, targets,
       if(slush_cells.oob == TRUE) {
         print("Out of bounds conditions present for slush_cells.")
         df1 <- df1 %>%
-          mutate(value = ifelse((value >= slush__c_min) | is.na(slush__c_min), value, slush__c_min + (1/3)*(slush__c_max - slush__c_min)),
-                 value = ifelse((value <= slush__c_max) | is.na(slush__c_max), value, slush__c_max - (1/3)*(slush__c_max - slush__c_min))
+          mutate(value = ifelse((value >= slush__c_min) | is.na(slush__c_min), value, slush__c_min + (slush.inbounds.parm)*(slush__c_max - slush__c_min)),
+                 value = ifelse((value <= slush__c_max) | is.na(slush__c_max), value, slush__c_max - (slush.inbounds.parm)*(slush__c_max - slush__c_min))
           )
       }
 

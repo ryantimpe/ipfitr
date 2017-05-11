@@ -13,6 +13,8 @@ ip_fit(datatable, targets, datatable.value.name = "value",
 \arguments{
 \item{datatable}{A data frame of values to be scaled to targets.}
 
+\item{datatable.value.names}{The name of the series in \code{datatable} containing the values to be scaled.}
+
 \item{targets}{A list of data frames containing subtotal targets for the \code{datatable}. All totals in each target should be equal.}
 
 \item{target.value.names}{The names of the series in \code{targets} containing subtotals to scale. Can be string or array of strings.}
@@ -32,15 +34,15 @@ Unlike \code{targets}, these data frames can be subsets only containing subtotal
 Any rows or values not listed, or \code{NA}s, will be scaled as normal.
 Using \code{ice_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.}
 
+\item{ice_slice.value.name}{The name or names of the series of iced values in \code{ice_slice}.}
+
 \item{slush_cells}{Optional data frame of values with same series columns as \code{datatable}, specifying bounded values to hit in the scaling.
 Provide minimumn and maximum values for a cell to be scaled.
 Any rows or values not listed, or \code{NA}s, will be scaled as normal.}
 
 \item{slush_cells.value.names}{An array of length 2 of the names of the minimum and maximum values in  \code{slush_cells}.}
 
-\item{datatable.value.names}{The name of the series in \code{datatable} containing the values to be scaled.}
-
-\item{ice_slice.value.name}{The name or names of the series of iced values in \code{ice_slice}.}
+\item{slush.inbounds.parm}{Numeric value of  0 < x < 1. Following an out-of-bounds occurence for \code{slush_cells}, the \code{slush.inbounds.parm} is the additional value added to the scaled value to bring it back into bounds. Values close to 0 bind the value to the violated bound, while close to 1 bind the value to the other bound. Values closer to0 will require more iterations to complete.}
 
 \item{save.tars}{Retain all targets, ice, and slush values in output data frame.}
 }
