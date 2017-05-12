@@ -6,11 +6,12 @@
 \usage{
 ip_fit(datatable, targets, datatable.value.name = "value",
   target.value.names = "value", max.error = 0.01, max.iterations = 25,
-  ice_cells = NULL, ice_cells.value.name = "value", ice_slice = NULL,
-  ice_slice.value.names = "value", slush_cells = NULL,
-  slush_cells.value.names = c("value_min", "value_max"), slush_slice = NULL,
-  slush_slice.value.names = c("value_min", "value_max"),
-  slush.inbounds.parm = 1/3, save.tars = TRUE)
+  freeze_cells = NULL, freeze_cells.value.name = "value",
+  freeze_slice = NULL, freeze_slice.value.names = "value",
+  minmax_cells = NULL, minmax_cells.value.names = c("value_min",
+  "value_max"), minmax_slice = NULL,
+  minmax_slice.value.names = c("value_min", "value_max"),
+  minmax.smash.param = 1/3, save.tars = TRUE, show.messages = TRUE)
 }
 \arguments{
 \item{datatable}{A data frame of values to be scaled to targets.}
@@ -24,37 +25,37 @@ Iterative scaling will complete once the error is below this threshold or \code{
 
 \item{max.iterations}{The maximum number of iterations of scaling. Iterative scaling with end once this value is reached, even if the error is above \code{max.error}.}
 
-\item{ice_cells}{Optional data frame of values with same series columns as \code{datatable}, specifying exact values to hit in the scaling.
+\item{freeze_cells}{Optional data frame of values with same series columns as \code{datatable}, specifying exact values to hit in the scaling.
 Any rows or values not listed, or \code{NA}s, will be scaled as normal.}
 
-\item{ice_cells.value.name}{The name of the series of iced values in \code{ice_cells}.}
+\item{freeze_cells.value.name}{The name of the series of iced values in \code{freeze_cells}.}
 
-\item{ice_slice}{Optional list of data frames containing subtotal targets for the \code{datatable}.
+\item{freeze_slice}{Optional list of data frames containing subtotal targets for the \code{datatable}.
 Unlike \code{targets}, these data frames can be subsets only containing subtotals for one or more rows.
 Any rows or values not listed, or \code{NA}s, will be scaled as normal.
-Using \code{ice_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.}
+Using \code{freeze_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.}
 
-\item{slush_cells}{Optional data frame of values with same series columns as \code{datatable}, specifying bounded values to hit in the scaling.
+\item{minmax_cells}{Optional data frame of values with same series columns as \code{datatable}, specifying bounded values to hit in the scaling.
 Provide minimumn and maximum values for a cell to be scaled.
 Any rows or values not listed, or \code{NA}s, will be scaled as normal.}
 
-\item{slush_cells.value.names}{An array of length 2 of the names of the minimum and maximum values in  \code{slush_cells}.}
+\item{minmax_cells.value.names}{An array of length 2 of the names of the minimum and maximum values in  \code{minmax_cells}.}
 
-\item{slush_slice}{Optional list of data frames containing subtotal targets for the \code{datatable}, specifying bounded values to hit in the scaling.
+\item{minmax_slice}{Optional list of data frames containing subtotal targets for the \code{datatable}, specifying bounded values to hit in the scaling.
 Provide minimumn and maximum values for a slice of the data frame to be scaled.
 Unlike \code{targets}, these data frames can be subsets only containing subtotals for one or more rows.
 Any rows or values not listed, or \code{NA}s, will be scaled as normal.
-Using \code{slush_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.}
+Using \code{minmax_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.}
+
+\item{minmax.smash.param}{Numeric value of  0 < x < 1. Following an out-of-bounds occurence for \code{minmax_cells}, the \code{minmax.smash.param} is the additional value added to the scaled value to bring it back into bounds.
+Values close to 0 bind the value to the violated bound, while close to 1 bind the value to the other bound.
+Values closer to0 will require more iterations to complete.}
 
 \item{datatable.value.names}{The name of the series in \code{datatable} containing the values to be scaled.}
 
-\item{ice_slice.value.name}{The name or names of the series of iced values in \code{ice_slice}.}
+\item{freeze_slice.value.name}{The name or names of the series of iced values in \code{freeze_slice}.}
 
-\item{slush_slice.value.name}{The name or names of the series of the minimum and maximum values in \code{slush_slice}.}
-
-\item{sluch.inbounds.param}{Numeric value of  0 < x < 1. Following an out-of-bounds occurence for \code{slush_cells}, the \code{slush.inbounds.parm} is the additional value added to the scaled value to bring it back into bounds.
-Values close to 0 bind the value to the violated bound, while close to 1 bind the value to the other bound.
-Values closer to0 will require more iterations to complete.}
+\item{minmax_slice.value.name}{The name or names of the series of the minimum and maximum values in \code{minmax_slice}.}
 }
 \value{
 A dataframe with the same dimensionality as \code{datatable}, with all values scaled to the subtotals specified in each data frame in \code{targets}.

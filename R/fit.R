@@ -10,25 +10,25 @@
 #' @param max.error The maximum total absolute difference allowed between final scaled values and targets.
 #'     Iterative scaling will complete once the error is below this threshold or \code{max.iterations} occur.
 #' @param max.iterations The maximum number of iterations of scaling. Iterative scaling with end once this value is reached, even if the error is above \code{max.error}.
-#' @param ice_cells Optional data frame of values with same series columns as \code{datatable}, specifying exact values to hit in the scaling.
+#' @param freeze_cells Optional data frame of values with same series columns as \code{datatable}, specifying exact values to hit in the scaling.
 #'    Any rows or values not listed, or \code{NA}s, will be scaled as normal.
-#' @param ice_cells.value.name The name of the series of iced values in \code{ice_cells}.
-#' @param ice_slice Optional list of data frames containing subtotal targets for the \code{datatable}.
+#' @param freeze_cells.value.name The name of the series of iced values in \code{freeze_cells}.
+#' @param freeze_slice Optional list of data frames containing subtotal targets for the \code{datatable}.
 #'    Unlike \code{targets}, these data frames can be subsets only containing subtotals for one or more rows.
 #'    Any rows or values not listed, or \code{NA}s, will be scaled as normal.
-#'    Using \code{ice_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.
-#' @param ice_slice.value.name The name or names of the series of iced values in \code{ice_slice}.
-#' @param slush_cells Optional data frame of values with same series columns as \code{datatable}, specifying bounded values to hit in the scaling.
+#'    Using \code{freeze_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.
+#' @param freeze_slice.value.name The name or names of the series of iced values in \code{freeze_slice}.
+#' @param minmax_cells Optional data frame of values with same series columns as \code{datatable}, specifying bounded values to hit in the scaling.
 #'    Provide minimumn and maximum values for a cell to be scaled.
 #'    Any rows or values not listed, or \code{NA}s, will be scaled as normal.
-#' @param slush_cells.value.names An array of length 2 of the names of the minimum and maximum values in  \code{slush_cells}.
-#' @param slush_slice Optional list of data frames containing subtotal targets for the \code{datatable}, specifying bounded values to hit in the scaling.
+#' @param minmax_cells.value.names An array of length 2 of the names of the minimum and maximum values in  \code{minmax_cells}.
+#' @param minmax_slice Optional list of data frames containing subtotal targets for the \code{datatable}, specifying bounded values to hit in the scaling.
 #'    Provide minimumn and maximum values for a slice of the data frame to be scaled.
 #'    Unlike \code{targets}, these data frames can be subsets only containing subtotals for one or more rows.
 #'    Any rows or values not listed, or \code{NA}s, will be scaled as normal.
-#'    Using \code{slush_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.
-#' @param slush_slice.value.name The name or names of the series of the minimum and maximum values in \code{slush_slice}.
-#' @param sluch.inbounds.param Numeric value of  0 < x < 1. Following an out-of-bounds occurence for \code{slush_cells}, the \code{slush.inbounds.parm} is the additional value added to the scaled value to bring it back into bounds.
+#'    Using \code{minmax_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.
+#' @param minmax_slice.value.name The name or names of the series of the minimum and maximum values in \code{minmax_slice}.
+#' @param minmax.smash.param Numeric value of  0 < x < 1. Following an out-of-bounds occurence for \code{minmax_cells}, the \code{minmax.smash.param} is the additional value added to the scaled value to bring it back into bounds.
 #' Values close to 0 bind the value to the violated bound, while close to 1 bind the value to the other bound.
 #' Values closer to0 will require more iterations to complete.
 #' @return A dataframe with the same dimensionality as \code{datatable}, with all values scaled to the subtotals specified in each data frame in \code{targets}.
@@ -43,11 +43,11 @@
 ip_fit <- function(datatable, targets,
                    datatable.value.name = "value", target.value.names = "value",
                    max.error = 0.01, max.iterations = 25,
-                   ice_cells = NULL, ice_cells.value.name = "value",
-                   ice_slice = NULL, ice_slice.value.names = "value",
-                   slush_cells = NULL, slush_cells.value.names = c("value_min", "value_max"),
-                   slush_slice = NULL, slush_slice.value.names = c("value_min", "value_max"),
-                   slush.inbounds.parm = 1/3,
+                   freeze_cells = NULL, freeze_cells.value.name = "value",
+                   freeze_slice = NULL, freeze_slice.value.names = "value",
+                   minmax_cells = NULL, minmax_cells.value.names = c("value_min", "value_max"),
+                   minmax_slice = NULL, minmax_slice.value.names = c("value_min", "value_max"),
+                   minmax.smash.param = 1/3,
                    save.tars = TRUE, show.messages = TRUE) {
 
   #Warnings
@@ -60,16 +60,16 @@ ip_fit <- function(datatable, targets,
   #Set initial conditions
   current.error     <- 10^9
   current.iteration <- 1
-  slush_cells.oob <- TRUE
-  slush_slice.oob <- TRUE
+  minmax_cells.oob <- TRUE
+  minmax_slice.oob <- TRUE
 
   #Freeze 2 - Ice Slices
-  if(!is.null(ice_slice)){
-    if(!is.list(ice_slice) | !is.data.frame(ice_slice[[1]])) {stop("Parameter ice_slice must be a list of data frames containing partial targets.")}
+  if(!is.null(freeze_slice)){
+    if(!is.list(freeze_slice) | !is.data.frame(freeze_slice[[1]])) {stop("Parameter freeze_slice must be a list of data frames containing partial targets.")}
     if(show.messages) {
-      message(paste(length(ice_slice), "ice slice partial targets supplied."))
+      message(paste(length(freeze_slice), "Frozen slices (partial) targets supplied."))
     }
-    tar.list <- c(targets, ice_slice)
+    tar.list <- c(targets, freeze_slice)
   } else{
     tar.list <- targets
   }
@@ -77,25 +77,25 @@ ip_fit <- function(datatable, targets,
   names(df0)[names(df0) == datatable.value.name] <- "value"
 
   #Freeze 1 - Ice Cells
-  if(!is.null(ice_cells)){
+  if(!is.null(freeze_cells)){
     if(show.messages) {
-      message(paste(nrow(ice_cells), "ice cell values will be hit."))
+      message(paste(nrow(freeze_cells), "Frozen cell values will be hit."))
     }
 
-    names(ice_cells)[names(ice_cells) == ice_cells.value.name] <- "ice__c"
+    names(freeze_cells)[names(freeze_cells) == freeze_cells.value.name] <- "frz__c"
 
     df0 <- df0 %>%
-      left_join(ice_cells, by = names(ice_cells %>% select(-ice__c))) %>%
+      left_join(freeze_cells, by = names(freeze_cells %>% select(-frz__c))) %>%
       #Iced cells are not unknown, so we don't need to include them in the IPF
-      mutate(value = ifelse(is.na(ice__c), value, 0))
+      mutate(value = ifelse(is.na(frz__c), value, 0))
 
     #Since we 0'd out the seed, we should also remove all the iced values from the targets
     tar.list <- lapply(tar.list, function(x){
-      names(x)[names(x) %in% c(target.value.names, ice_slice.value.names)] <- "value"
+      names(x)[names(x) %in% c(target.value.names, freeze_slice.value.names)] <- "value"
 
-      ice_target <- ice_cells %>%
+      ice_target <- freeze_cells %>%
         group_by_(.dots = as.list(names(x)[!(names(x) == "value")])) %>%
-        summarize(iced = sum(ice__c, na.rm=T)) %>%
+        summarize(iced = sum(frz__c, na.rm=T)) %>%
         ungroup()
 
       df <- x %>%
@@ -104,47 +104,47 @@ ip_fit <- function(datatable, targets,
         mutate(value = value - iced) %>%
         select(-iced)
 
-      if(any(df$value < 0)){stop("Iced cell values exceed supplied targets. Unable to rationalize.")}
+      if(any(df$value < 0)){stop("Frozen cell values exceed supplied targets. Unable to rationalize.")}
 
       return(df)
     })
   } #End ice cells
 
   #Freeze 3 - Slush Cells. Similar to Ice, but cells have a min/max bound, not specific value
-  if(!is.null(slush_cells)) {
+  if(!is.null(minmax_cells)) {
     if(show.messages) {
-      message(paste(nrow(slush_cells), "slush cell min/max values supplied."))
+      message(paste(nrow(minmax_cells), "min/max cell values supplied."))
     }
 
-    names(slush_cells)[names(slush_cells) == slush_cells.value.names[1]] <- "slush__c_min"
-    names(slush_cells)[names(slush_cells) == slush_cells.value.names[2]] <- "slush__c_max"
+    names(minmax_cells)[names(minmax_cells) == minmax_cells.value.names[1]] <- "minmax__c_min"
+    names(minmax_cells)[names(minmax_cells) == minmax_cells.value.names[2]] <- "minmax__c_max"
 
     df0 <- df0 %>%
-      left_join(slush_cells, by = names(slush_cells %>% select(-starts_with("slush__"))))
+      left_join(minmax_cells, by = names(minmax_cells %>% select(-starts_with("minmax__"))))
   }
 
   #Freeze 4 - Slush Slices. Partial (or complete?) targets with min/max bound
-  if(!is.null(slush_slice)) {
-    if(!is.list(slush_slice)| !is.data.frame(slush_slice[[1]])) {
-      stop("Parameter slush_slice must be a list of data frames containing partial min/max targets.")
+  if(!is.null(minmax_slice)) {
+    if(!is.list(minmax_slice)| !is.data.frame(minmax_slice[[1]])) {
+      stop("Parameter minmax_slice must be a list of data frames containing partial min/max targets.")
     }
 
-    slush.list <- slush_slice
+    slush.list <- minmax_slice
     if(show.messages) {
-      message(paste(length(slush.list), "slush slice targets supplied."))
+      message(paste(length(slush.list), "Min/max slice targets supplied."))
     }
 
     #Freeze 1 inside Freeze 4 - Ice Cells
-    if(!is.null(ice_cells)){
+    if(!is.null(freeze_cells)){
 
       #Like the normal targets, need to subtract the frozen values for the min/max
       slush.list <- lapply(slush.list, function(x){
-        names(x)[names(x) == slush_slice.value.names[1]] <- "value_min"
-        names(x)[names(x) == slush_slice.value.names[2]] <- "value_max"
+        names(x)[names(x) == minmax_slice.value.names[1]] <- "value_min"
+        names(x)[names(x) == minmax_slice.value.names[2]] <- "value_max"
 
-        ice_slush <- ice_cells %>%
+        ice_slush <- freeze_cells %>%
           group_by_(.dots = as.list(names(x)[!(names(x) %in% c("value_min", "value_max"))])) %>%
-          summarize(iced = sum(ice__c, na.rm=T)) %>%
+          summarize(iced = sum(frz__c, na.rm=T)) %>%
           ungroup()
 
         df <- x %>%
@@ -154,10 +154,10 @@ ip_fit <- function(datatable, targets,
                  value_max = value_max - iced) %>%
           select(-iced)
 
-        if(any(df$value_min < 0)){stop("Iced cell values exceed supplied slush_slice targets. Unable to rationalize.")}
+        if(any(df$value_min < 0)){stop("Frozen cell values exceed supplied minmax_slice targets. Unable to rationalize.")}
 
-        names(x)[names(x) == "value_min"] <- slush_slice.value.names[1]
-        names(x)[names(x) == "value_max"] <- slush_slice.value.names[2]
+        names(x)[names(x) == "value_min"] <- minmax_slice.value.names[1]
+        names(x)[names(x) == "value_max"] <- minmax_slice.value.names[2]
 
         return(df)
       })
@@ -167,8 +167,8 @@ ip_fit <- function(datatable, targets,
     for( i in seq_along(slush.list)){
       x <- slush.list[[i]]
 
-      names(x)[names(x) == slush_slice.value.names[1]] <- paste0("slush__s_min", i)
-      names(x)[names(x) == slush_slice.value.names[2]] <- paste0("slush__s_max", i)
+      names(x)[names(x) == minmax_slice.value.names[1]] <- paste0("minmax__s_min", i)
+      names(x)[names(x) == minmax_slice.value.names[2]] <- paste0("minmax__s_max", i)
 
       names(slush.list[[i]]) <- names(x)
     }
@@ -176,7 +176,7 @@ ip_fit <- function(datatable, targets,
     #Add each of those slice targets to the master data frame
     for(x in slush.list){
       df0 <- df0 %>%
-        left_join(x, by = names(x %>% select(-starts_with("slush__"))))
+        left_join(x, by = names(x %>% select(-starts_with("minmax__"))))
     }
 
   } #End Freeze 4 setup
@@ -196,7 +196,7 @@ ip_fit <- function(datatable, targets,
   }
 
   #IPF Loop
-  while((current.error > max.error | slush_cells.oob == TRUE | slush_slice.oob == TRUE) &
+  while((current.error > max.error | minmax_cells.oob == TRUE | minmax_slice.oob == TRUE) &
         current.iteration <= max.iterations ) {
 
     if(show.messages) {
@@ -204,8 +204,8 @@ ip_fit <- function(datatable, targets,
     }
 
     #Reset Freeze 3+4 - Slush Cells/Slice - to off
-    slush_cells.oob <- FALSE
-    slush_slice.oob <- FALSE
+    minmax_cells.oob <- FALSE
+    minmax_slice.oob <- FALSE
 
     ##
     # Scaling
@@ -244,26 +244,26 @@ ip_fit <- function(datatable, targets,
     ###
     #Similar to Ice, but cells have a min/max bound, not specific value
     #Calculate AFTER error, as this is its own deal breaker. If everything is in bounds, no problem
-    if(!is.null(slush_slice)) {
+    if(!is.null(minmax_slice)) {
 
-      #1) For each slush_slice target, check to see there are any OOB
+      #1) For each minmax_slice target, check to see there are any OOB
       for(i in seq_along(slush.list)) {
         x <- slush.list[[i]]
 
         #Roll-up version of df1 to check slush targets. Use generic target names for easier programmign
         df1_slushs <- df1
-        names(df1_slushs)[names(df1_slushs) == paste0("slush__s_min", i)] <- "slush__s_min"
-        names(df1_slushs)[names(df1_slushs) == paste0("slush__s_max", i)] <- "slush__s_max"
+        names(df1_slushs)[names(df1_slushs) == paste0("minmax__s_min", i)] <- "minmax__s_min"
+        names(df1_slushs)[names(df1_slushs) == paste0("minmax__s_max", i)] <- "minmax__s_max"
 
-        names(x)[names(x) == paste0("slush__s_min", i)] <- "slush__s_min"
-        names(x)[names(x) == paste0("slush__s_max", i)] <- "slush__s_max"
+        names(x)[names(x) == paste0("minmax__s_min", i)] <- "minmax__s_min"
+        names(x)[names(x) == paste0("minmax__s_max", i)] <- "minmax__s_max"
 
         df1_slushs <- df1_slushs %>%
           #Group by names of the target, INCLUDING the target value names, since they are the same for each group element
           group_by_(.dots = as.list(names(x))) %>%
           summarize(value = sum(value, na.rm = T)) %>%
           ungroup() %>%
-          mutate(check_slush_s = (value < slush__s_min) | (value > slush__s_max))  #Look for OOB
+          mutate(check_slush_s = (value < minmax__s_min) | (value > minmax__s_max))  #Look for OOB
 
         #If any of the bounded cells are OOB,
         # Then proceed to edit the df1 values to smash them into bounds
@@ -273,24 +273,24 @@ ip_fit <- function(datatable, targets,
           df1_slushs$check_slush_s <- NULL
 
           if(show.messages) {
-            message(paste("    Out of bounds conditions present for slush_slice: Target", i))
+            message(paste("    Out of bounds conditions present for minmax_slice: Target", i))
           }
 
           #First update the trigger to True - There needs to be another iterations
-          slush_slice.oob <- TRUE
+          minmax_slice.oob <- TRUE
 
           #Then figure out by how much to move the values
           df1_slushs <- df1_slushs %>%
             #New values for the slush-targeted values
-            mutate(value_o_slush = ifelse((value >= slush__s_min), value, slush__s_min + (slush.inbounds.parm)*(slush__s_max - slush__s_min)),
-                   value_o_slush = ifelse((value_o_slush <= slush__s_max), value_o_slush, slush__s_max - (slush.inbounds.parm)*(slush__s_max - slush__s_min))
+            mutate(value_o_slush = ifelse((value >= minmax__s_min), value, minmax__s_min + (minmax.smash.param)*(minmax__s_max - minmax__s_min)),
+                   value_o_slush = ifelse((value_o_slush <= minmax__s_max), value_o_slush, minmax__s_max - (minmax.smash.param)*(minmax__s_max - minmax__s_min))
             ) %>%
             #How much the remaining values have to move to compensate for that shift
             mutate(value_o_remainder = ifelse(is.na(value_o_slush), value, NA),
                    ratio_remainder = (sum(value, na.rm = T) - sum(value_o_slush, na.rm=T))/sum(value_o_remainder, na.rm=T)) %>%
             #Combine into a single ratio to apply to data cube
             mutate(ratio = ifelse(is.na(value_o_slush), ratio_remainder, value_o_slush/value)) %>%
-            select(-value, -slush__s_min, -slush__s_max, -value_o_slush, -value_o_remainder, -ratio_remainder)
+            select(-value, -minmax__s_min, -minmax__s_max, -value_o_slush, -value_o_remainder, -ratio_remainder)
 
           #Apply this df of ratios to our main data frame
           df1 <- df1 %>%
@@ -313,24 +313,24 @@ ip_fit <- function(datatable, targets,
     #Calculate AFTER error, as this is its own deal breaker. If everything is in bounds, no problem
     #Do Freeze 3 AFTER Freeze 4 because this is more restrictive
 
-    if(!is.null(slush_cells)) {
+    if(!is.null(minmax_cells)) {
 
       df1 <- df1 %>%
-        mutate(check_slush_c = (value < slush__c_min) | (value > slush__c_max))  #Look for OOB
+        mutate(check_slush_c = (value < minmax__c_min) | (value > minmax__c_max))  #Look for OOB
 
       #If any of the bounded cells are OOB, first update the trigger to True
-      slush_cells.oob <- any(df1$check_slush_c, na.rm = T)
+      minmax_cells.oob <- any(df1$check_slush_c, na.rm = T)
       df1$check_slush_c <- NULL
 
       #Then replace those values with 1/3 closer above/below that missed bound
-      if(slush_cells.oob == TRUE) {
+      if(minmax_cells.oob == TRUE) {
         if(show.messages) {
-          message("    Out of bounds conditions present for slush_cells.")
+          message("    Out of bounds conditions present for minmax_cells.")
         }
 
         df1 <- df1 %>%
-          mutate(value = ifelse((value >= slush__c_min) | is.na(slush__c_min), value, slush__c_min + (slush.inbounds.parm)*(slush__c_max - slush__c_min)),
-                 value = ifelse((value <= slush__c_max) | is.na(slush__c_max), value, slush__c_max - (slush.inbounds.parm)*(slush__c_max - slush__c_min))
+          mutate(value = ifelse((value >= minmax__c_min) | is.na(minmax__c_min), value, minmax__c_min + (minmax.smash.param)*(minmax__c_max - minmax__c_min)),
+                 value = ifelse((value <= minmax__c_max) | is.na(minmax__c_max), value, minmax__c_max - (minmax.smash.param)*(minmax__c_max - minmax__c_min))
           )
       }
     } #End Freeze 3
@@ -348,9 +348,9 @@ ip_fit <- function(datatable, targets,
 
   #Freeze 1 - Iced Cells
   #Add back Iced Cells
-  if(!is.null(ice_cells)){
+  if(!is.null(freeze_cells)){
     df0 <- df0 %>%
-      mutate(value = ifelse(is.na(ice__c), value, ice__c))
+      mutate(value = ifelse(is.na(frz__c), value, frz__c))
   }
 
   #Save/print all the assumption columns?
@@ -358,7 +358,7 @@ ip_fit <- function(datatable, targets,
   # TODO: Add frozen values back into tars... or just replace tars. That's easier
   if(!save.tars){
     df0 <- df0 %>%
-      select(-starts_with("tar__"), -starts_with("ice__"), -starts_with("slush__"))
+      select(-starts_with("tar__"), -starts_with("frz__"), -starts_with("minmax__"))
   }
 
   return(df0)
