@@ -31,6 +31,9 @@ ip_create_seed <- function(tars, names.exclude = c("value"), value.set = 1, valu
 
   #Create DF, dropping the excluded series before creation
   df <- expand.grid(series.list)
+  df <- df %>%
+    mutate_if(is.factor, as.character)
+
   df[, value.name] <- value.set
 
   return(df)

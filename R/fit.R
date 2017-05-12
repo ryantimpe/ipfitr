@@ -48,10 +48,14 @@ ip_fit <- function(datatable, targets,
                    slush_cells = NULL, slush_cells.value.names = c("value_min", "value_max"),
                    slush_slice = NULL, slush_slice.value.names = c("value_min", "value_max"),
                    slush.inbounds.parm = 1/3,
-                   save.tars = TRUE) {
+                   save.tars = TRUE, show.messages = TRUE) {
 
   #Warnings
   if(is.null(targets) | !is.list(targets) | length(targets) == 1) {stop("Targets must be a list of at least two data frames")}
+
+  if(show.messages) {
+    message(paste("Initializing IPF...", length(targets), "targets supplied for the IPF."))
+  }
 
   #Set initial conditions
   current.error     <- 10^9
@@ -62,6 +66,9 @@ ip_fit <- function(datatable, targets,
   #Freeze 2 - Ice Slices
   if(!is.null(ice_slice)){
     if(!is.list(ice_slice) | !is.data.frame(ice_slice[[1]])) {stop("Parameter ice_slice must be a list of data frames containing partial targets.")}
+    if(show.messages) {
+      message(paste(length(ice_slice), "ice slice partial targets supplied."))
+    }
     tar.list <- c(targets, ice_slice)
   } else{
     tar.list <- targets
@@ -71,11 +78,14 @@ ip_fit <- function(datatable, targets,
 
   #Freeze 1 - Ice Cells
   if(!is.null(ice_cells)){
-    print(names(ice_cells))
+    if(show.messages) {
+      message(paste(nrow(ice_cells), "ice cell values will be hit."))
+    }
+
     names(ice_cells)[names(ice_cells) == ice_cells.value.name] <- "ice__c"
 
     df0 <- df0 %>%
-      left_join(ice_cells) %>%
+      left_join(ice_cells, by = names(ice_cells %>% select(-ice__c))) %>%
       #Iced cells are not unknown, so we don't need to include them in the IPF
       mutate(value = ifelse(is.na(ice__c), value, 0))
 
@@ -89,7 +99,7 @@ ip_fit <- function(datatable, targets,
         ungroup()
 
       df <- x %>%
-        left_join(ice_target) %>%
+        left_join(ice_target, by = names(ice_target %>% select(-iced))) %>%
         mutate(iced = ifelse(is.na(iced), 0, iced)) %>%
         mutate(value = value - iced) %>%
         select(-iced)
@@ -102,11 +112,15 @@ ip_fit <- function(datatable, targets,
 
   #Freeze 3 - Slush Cells. Similar to Ice, but cells have a min/max bound, not specific value
   if(!is.null(slush_cells)) {
+    if(show.messages) {
+      message(paste(nrow(slush_cells), "slush cell min/max values supplied."))
+    }
+
     names(slush_cells)[names(slush_cells) == slush_cells.value.names[1]] <- "slush__c_min"
     names(slush_cells)[names(slush_cells) == slush_cells.value.names[2]] <- "slush__c_max"
 
     df0 <- df0 %>%
-      left_join(slush_cells)
+      left_join(slush_cells, by = names(slush_cells %>% select(-starts_with("slush__"))))
   }
 
   #Freeze 4 - Slush Slices. Partial (or complete?) targets with min/max bound
@@ -116,6 +130,9 @@ ip_fit <- function(datatable, targets,
     }
 
     slush.list <- slush_slice
+    if(show.messages) {
+      message(paste(length(slush.list), "slush slice targets supplied."))
+    }
 
     #Freeze 1 inside Freeze 4 - Ice Cells
     if(!is.null(ice_cells)){
@@ -131,7 +148,7 @@ ip_fit <- function(datatable, targets,
           ungroup()
 
         df <- x %>%
-          left_join(ice_slush) %>%
+          left_join(ice_slush, by = names(ice_slush %>% select(-iced))) %>%
           mutate(iced = ifelse(is.na(iced), 0, iced)) %>%
           mutate(value_min = value_min - iced,
                  value_max = value_max - iced) %>%
@@ -159,7 +176,7 @@ ip_fit <- function(datatable, targets,
     #Add each of those slice targets to the master data frame
     for(x in slush.list){
       df0 <- df0 %>%
-        left_join(x)
+        left_join(x, by = names(x %>% select(-starts_with("slush__"))))
     }
 
   } #End Freeze 4 setup
@@ -175,13 +192,16 @@ ip_fit <- function(datatable, targets,
   #Format input seed
   for(x in tar.list){
     df0 <- df0 %>%
-      left_join(x)
+      left_join(x, by = names(x %>% select(-starts_with("tar__"))))
   }
 
   #IPF Loop
   while((current.error > max.error | slush_cells.oob == TRUE | slush_slice.oob == TRUE) &
         current.iteration <= max.iterations ) {
-    print(paste("Iteration", current.iteration))
+
+    if(show.messages) {
+      message(paste("Iteration Summary:", current.iteration))
+    }
 
     #Reset Freeze 3+4 - Slush Cells/Slice - to off
     slush_cells.oob <- FALSE
@@ -214,6 +234,10 @@ ip_fit <- function(datatable, targets,
     current.error <- sum(sapply(err.list, function(x){
       return(sum(abs(x$error), na.rm=T))
     }), na.rm=T)
+
+    if(show.messages) {
+        message(paste("    Iteration Error: ", round(current.error, 5)))
+    }
 
     ###
     # Freeze 4 - Slush Slice
@@ -248,7 +272,9 @@ ip_fit <- function(datatable, targets,
         if(any(df1_slushs$check_slush_s, na.rm = T)){
           df1_slushs$check_slush_s <- NULL
 
-          print(paste("Out of bounds conditions present for slush_slice: Target", i))
+          if(show.messages) {
+            message(paste("    Out of bounds conditions present for slush_slice: Target", i))
+          }
 
           #First update the trigger to True - There needs to be another iterations
           slush_slice.oob <- TRUE
@@ -268,7 +294,7 @@ ip_fit <- function(datatable, targets,
 
           #Apply this df of ratios to our main data frame
           df1 <- df1 %>%
-            left_join(df1_slushs) %>%
+            left_join(df1_slushs, by = names(df1_slushs %>% select(-ratio))) %>%
             mutate(ratio = ifelse(is.na(ratio), 1, ratio)) %>%
             mutate(value = value * ratio) %>%
             select(-ratio)
@@ -298,7 +324,10 @@ ip_fit <- function(datatable, targets,
 
       #Then replace those values with 1/3 closer above/below that missed bound
       if(slush_cells.oob == TRUE) {
-        print("Out of bounds conditions present for slush_cells.")
+        if(show.messages) {
+          message("    Out of bounds conditions present for slush_cells.")
+        }
+
         df1 <- df1 %>%
           mutate(value = ifelse((value >= slush__c_min) | is.na(slush__c_min), value, slush__c_min + (slush.inbounds.parm)*(slush__c_max - slush__c_min)),
                  value = ifelse((value <= slush__c_max) | is.na(slush__c_max), value, slush__c_max - (slush.inbounds.parm)*(slush__c_max - slush__c_min))
@@ -315,7 +344,6 @@ ip_fit <- function(datatable, targets,
 
     df0 <- df1
 
-    print(paste("Error: ", round(current.error, 4)))
   }
 
   #Freeze 1 - Iced Cells
