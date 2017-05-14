@@ -15,7 +15,7 @@
 #' tar1 <- data.frame(x = letters[1:2], value = runif(2))
 #' tar2 <- data.frame(y = letters[3:5], value = runif(3))
 #' ip_create_seed(list(tar1, tar2))
-
+#' @export
 ip_create_seed <- function(tars, names.exclude = c("value"), value.set = 1, value.name = "value"){
 
   #Warnings

@@ -39,7 +39,7 @@
 #'
 #' tar.list <- list(tar1, tar2, tar3)
 #' df <- ip_create_seed(tar.list) %>% ip_fit(tar.list)
-
+#' @export
 ip_fit <- function(datatable, targets,
                    datatable.value.name = "value", target.value.names = "value",
                    max.error = 0.01, max.iterations = 25,
@@ -56,6 +56,17 @@ ip_fit <- function(datatable, targets,
   if(show.messages) {
     message(paste("Initializing IPF...", length(targets), "targets supplied for the IPF."))
   }
+
+  #Check targets
+  target.checker <- vector(length = length(targets)) #Use Targets, not tar.list
+  for(i in seq_along(targets)){
+    x <- targets[[i]]
+    target.checker[i] <- sum(x[, target.value.names], na.rm=T)
+  }
+  if(length(unique(round(target.checker, 4))) > 1){
+    message("Warning: Supplied targets do not have the same totals. IPF will not converge.")
+  }
+
 
   #Set initial conditions
   current.error     <- 10^9
@@ -113,7 +124,7 @@ ip_fit <- function(datatable, targets,
   #Freeze 3 - Slush Cells. Similar to Ice, but cells have a min/max bound, not specific value
   if(!is.null(minmax_cells)) {
     if(show.messages) {
-      message(paste(nrow(minmax_cells), "min/max cell values supplied."))
+      message(paste(nrow(minmax_cells), "Min/max cell values supplied."))
     }
 
     names(minmax_cells)[names(minmax_cells) == minmax_cells.value.names[1]] <- "minmax__c_min"
@@ -281,10 +292,18 @@ ip_fit <- function(datatable, targets,
 
           #Then figure out by how much to move the values
           df1_slushs <- df1_slushs %>%
-            #New values for the slush-targeted values
-            mutate(value_o_slush = ifelse((value >= minmax__s_min), value, minmax__s_min + (minmax.smash.param)*(minmax__s_max - minmax__s_min)),
-                   value_o_slush = ifelse((value_o_slush <= minmax__s_max), value_o_slush, minmax__s_max - (minmax.smash.param)*(minmax__s_max - minmax__s_min))
+            #Allow for no lower bound
+            mutate(minmax__s_min = ifelse(is.na(minmax__s_min) & !is.na(minmax__s_max), 0 , minmax__s_min)) %>%
+            mutate(value_o_slush = ifelse((value >= minmax__s_min) | is.na(minmax__s_min), value,
+                                  #Allow for no upper bound
+                                  ifelse(!is.na(minmax__s_max), minmax__s_min + (minmax.smash.param)*(minmax__s_max - minmax__s_min),
+                                         (1+minmax.smash.param)*minmax__s_min)),
+                   value_o_slush = ifelse((value_o_slush <= minmax__s_max) | is.na(minmax__s_max), value_o_slush, minmax__s_max - (minmax.smash.param)*(minmax__s_max - minmax__s_min))
             ) %>%
+            # #New values for the slush-targeted values
+            # mutate(value_o_slush = ifelse((value >= minmax__s_min), value, minmax__s_min + (minmax.smash.param)*(minmax__s_max - minmax__s_min)),
+            #        value_o_slush = ifelse((value_o_slush <= minmax__s_max), value_o_slush, minmax__s_max - (minmax.smash.param)*(minmax__s_max - minmax__s_min))
+            # ) %>%
             #How much the remaining values have to move to compensate for that shift
             mutate(value_o_remainder = ifelse(is.na(value_o_slush), value, NA),
                    ratio_remainder = (sum(value, na.rm = T) - sum(value_o_slush, na.rm=T))/sum(value_o_remainder, na.rm=T)) %>%
@@ -329,7 +348,12 @@ ip_fit <- function(datatable, targets,
         }
 
         df1 <- df1 %>%
-          mutate(value = ifelse((value >= minmax__c_min) | is.na(minmax__c_min), value, minmax__c_min + (minmax.smash.param)*(minmax__c_max - minmax__c_min)),
+          #Allow for no lower bound
+          mutate(minmax__c_min = ifelse(is.na(minmax__c_min) & !is.na(minmax__c_max), 0 , minmax__c_min)) %>%
+          mutate(value = ifelse((value >= minmax__c_min) | is.na(minmax__c_min), value,
+                                #Allow for no upper bound
+                                ifelse(!is.na(minmax__c_max), minmax__c_min + (minmax.smash.param)*(minmax__c_max - minmax__c_min),
+                                       (1+minmax.smash.param)*minmax__c_min)),
                  value = ifelse((value <= minmax__c_max) | is.na(minmax__c_max), value, minmax__c_max - (minmax.smash.param)*(minmax__c_max - minmax__c_min))
           )
       }
@@ -358,7 +382,8 @@ ip_fit <- function(datatable, targets,
   # TODO: Add frozen values back into tars... or just replace tars. That's easier
   if(!save.tars){
     df0 <- df0 %>%
-      select(-starts_with("tar__"), -starts_with("frz__"), -starts_with("minmax__"))
+      ungroup() %>%
+      select(-contains("__"))
   }
 
   return(df0)

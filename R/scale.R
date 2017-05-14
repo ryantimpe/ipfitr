@@ -12,7 +12,7 @@
 #' ip_scale(df, tar1)
 #'
 #' df %>% ip_scale(tar1, series_start = "value", series_target = "value")
-
+#' @export
 ip_scale <- function(datatable, target, series_start = "value", series_target = "value") {
 
   names(datatable)[names(datatable) == series_start] <- "value"
@@ -45,7 +45,7 @@ ip_scale <- function(datatable, target, series_start = "value", series_target = 
 #'
 #' df %>% ip_scale_a("series1", series_start = "count", series_target = "tar1")
 #'
-
+#' @export
 ip_scale_a <- function(datatable, target_series, series_start = "value", series_target = "tar1") {
 
   names(datatable)[names(datatable) == series_start] <- "value_temp"

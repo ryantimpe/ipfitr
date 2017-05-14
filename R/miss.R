@@ -10,7 +10,7 @@
 #' df <- data.frame(x = rep(letters[1:2], 2), y = c(rep("c", 2), rep("d", 2)), value = runif(4))
 #' tar1 <- data.frame(x = letters[1:2], value = c(20, 30))
 #' df %>% ip_scale(tar1) %>% ip_miss(tar1)
-
+#' @export
 ip_miss <- function(datatable, target, series_start = "value", series_target = "value") {
 
   names(datatable)[names(datatable) == series_start] <- "value"
@@ -35,7 +35,7 @@ ip_miss <- function(datatable, target, series_start = "value", series_target = "
 #' @param series_start The name of the series in \code{datatable} to be compared to the \code{target}.
 #' @param series_target The name of the \code{target} series.
 #' @return A summarized data frame with the same dimensionality as \code{target}, with a measurement of error.
-
+#' @export
 ip_miss_a <- function(datatable, target_series, series_start = "value", series_target = "tar1") {
 
   names(datatable)[names(datatable) == series_target] <- "target"
