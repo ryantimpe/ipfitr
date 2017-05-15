@@ -21,7 +21,7 @@ ip_scale <- function(datatable, target, series_start = "value", series_target = 
   datatable <- datatable %>%
     left_join(target) %>%
     group_by_(.dots = as.list(names(target)[!(names(target) %in% c(series_target))])) %>%
-    mutate(shr = value/sum(value, na.rm=T)) %>%
+    mutate(shr = ifelse(value == 0 | is.na(value), 0, value/sum(value, na.rm=T))) %>%
     ungroup() %>%
     mutate(value = shr * target_value) %>%
     select(-shr, -target_value)
@@ -54,7 +54,7 @@ ip_scale_a <- function(datatable, target_series, series_start = "value", series_
 
   datatable <- datatable %>%
     group_by_(.dots = as.list(target_series[!(target_series %in% c(series_target))])) %>%
-    mutate(shr = value_temp/sum(value_temp, na.rm=T)) %>%
+    mutate(shr = ifelse(value_temp == 0 | is.na(value_temp), 0, value_temp/sum(value_temp, na.rm=T))) %>%
     ungroup() %>%
     #Discount factor for any missing targets
     #By however much the existing targets raise, lower the other values by that much

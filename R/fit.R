@@ -196,14 +196,28 @@ ip_fit <- function(datatable, targets,
   for( i in seq_along(tar.list)){
     x <- tar.list[[i]]
 
-    names(x)[names(x) == datatable.value.name] <- paste0("tar__", i)
-    names(tar.list[[i]]) <- names(x)
+    #If it's a target, give it the prefix tar__
+    if(i <= length(targets)) {
+      names(x)[names(x) %in% target.value.names] <- paste0("tar__", i)
+      names(tar.list[[i]]) <- names(x)
+    } else { #Else it's a freeze slice
+      names(x)[names(x) %in% target.value.names] <- paste0("tar__frz_", i)
+      names(tar.list[[i]]) <- names(x)
+    }
+
   }
 
   #Format input seed
-  for(x in tar.list){
+  for(i in seq_along(tar.list)){
+    x <- tar.list[[i]]
+
     df0 <- df0 %>%
-      left_join(x, by = names(x %>% select(-starts_with("tar__"))))
+      left_join(x, by = names(x %>% select(-dplyr::contains("__"))))
+
+    #If it's a target and has NAs, replace them with 0
+    if(i <= length(targets)) {
+      df0[, paste0("tar__", i)][is.na(df0[, paste0("tar__", i)])] <- 0
+    }
   }
 
   #IPF Loop
@@ -225,8 +239,16 @@ ip_fit <- function(datatable, targets,
     df1 <- df0
     for(i in seq_along(tar.list)){
       x <- tar.list[[i]]
-      df1 <- df1 %>%
-        ip_scale_a(target_series = names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__", i))
+
+      #If it's a target
+      if(i <= length(targets)) {
+        df1 <- df1 %>%
+          ip_scale_a(target_series = names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__", i))
+
+      } else { #Else it's a freeze slice
+        df1 <- df1 %>%
+          ip_scale_a(target_series = names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__frz_", i))
+      }
     }
 
     ###
@@ -237,8 +259,14 @@ ip_fit <- function(datatable, targets,
     # Save results to a list of dfs
     err.list <- lapply(seq_along(head(tar.list, -1)), function(i){
       x <- tar.list[[i]]
-      df1 %>%
-        ip_miss_a(names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__", i))
+      #If it's a target
+      if(i <= length(targets)) {
+        df1 <- df1 %>%
+          ip_miss_a(names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__", i))
+      } else { #Else it's a freeze slice
+        df1 <- df1 %>%
+          ip_miss_a(names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__frz_", i))
+      }
     })
 
     #For each error df, sum the error column, then sum those sums for total abs error
