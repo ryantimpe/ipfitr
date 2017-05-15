@@ -382,8 +382,7 @@ ip_fit <- function(datatable, targets,
   # TODO: Add frozen values back into tars... or just replace tars. That's easier
   if(!save.tars){
     df0 <- df0 %>%
-      ungroup() %>%
-      select(-contains("__"))
+      select(-dplyr::contains("__"))
   }
 
   return(df0)
