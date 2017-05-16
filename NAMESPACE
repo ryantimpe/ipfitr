@@ -3,6 +3,7 @@
 export(ip_create_seed)
 export(ip_expand)
 export(ip_fit)
+export(ip_load_assumptions)
 export(ip_miss)
 export(ip_miss_a)
 export(ip_scale)
