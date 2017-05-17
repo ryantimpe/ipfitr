@@ -11,14 +11,20 @@
 #' tar1 <- data.frame(x = letters[1:2], value = c(20, 30))
 #' df %>% ip_scale(tar1) %>% ip_miss(tar1)
 #' @export
-ip_miss <- function(datatable, target, series_start = "value", series_target = "value") {
+ip_miss <- function(datatable, target, series_start = "value", series_target = "value", series_type = "tar") {
 
   names(datatable)[names(datatable) == series_start] <- "value"
   names(target)[names(target) == series_target] <- "target_value"
 
   error <- datatable %>%
     left_join(target) %>%
-    group_by_(.dots = as.list(c(names(target)))) %>%
+    do(
+      if(series_type != "subtl"){
+        group_by_(., .dots = as.list(c(names(target))))
+      } else {
+        group_by_(., .dots = as.list("target_value"))
+      }
+    ) %>%
     summarize(sum = sum(value, na.rm=T)) %>%
     ungroup() %>%
     mutate(error = abs(sum - target_value))
@@ -36,13 +42,19 @@ ip_miss <- function(datatable, target, series_start = "value", series_target = "
 #' @param series_target The name of the \code{target} series.
 #' @return A summarized data frame with the same dimensionality as \code{target}, with a measurement of error.
 #' @export
-ip_miss_a <- function(datatable, target_series, series_start = "value", series_target = "tar1") {
+ip_miss_a <- function(datatable, target_series, series_start = "value", series_target = "tar1", series_type = "tar") {
 
   names(datatable)[names(datatable) == series_target] <- "target"
   target_series[target_series == series_target] <- "target"
 
   error <- datatable %>%
-    group_by_(.dots = as.list(unique(c(target_series, "target")))) %>%
+    do(
+      if(series_type != "subtl"){
+        group_by_(., .dots = as.list(unique(c(target_series, "target"))))
+      } else {
+        group_by_(., .dots = as.list("target"))
+      }
+    ) %>%
     summarize(sum = sum(value, na.rm=T)) %>%
     ungroup() %>%
     mutate(error = abs(sum - target))

@@ -51,10 +51,10 @@ ip_fit <- function(datatable, targets,
                    save.tars = TRUE, show.messages = TRUE) {
 
   #Warnings
-  if(is.null(targets) | !is.list(targets) | length(targets) == 1) {stop("Targets must be a list of at least two data frames")}
+  if(is.null(targets) | !is.list(targets) | length(targets) == 1) {stop("Targets must be a list of at least two data frames.")}
 
   if(show.messages) {
-    message(paste("Initializing IPF...", length(targets), "targets supplied for the IPF."))
+    message(paste("Initializing IPF...", length(targets), "targets supplied."))
   }
 
   #Check targets
@@ -74,16 +74,22 @@ ip_fit <- function(datatable, targets,
   minmax_cells.oob <- TRUE
   minmax_slice.oob <- TRUE
 
-  #Freeze 2 - Ice Slices
+  #New for 0.0.0.9005 - Slice targets now supplied as single data frame
+  #Freeze 2- Ice Slices
   if(!is.null(freeze_slice)){
-    if(!is.list(freeze_slice) | !is.data.frame(freeze_slice[[1]])) {stop("Parameter freeze_slice must be a list of data frames containing partial targets.")}
+    if(!is.data.frame(freeze_slice)) {stop("Parameter freeze_slice must be a data frame containing partial targets or subtotals.")}
     if(show.messages) {
-      message(paste(length(freeze_slice), "Frozen slices (partial) targets supplied."))
+      message(paste(nrow(freeze_slice), "Frozen slices (partial) targets supplied."))
     }
-    tar.list <- c(targets, freeze_slice)
+
+    freeze_slice_list <- ip_load_slice_a(freeze_slice, slice.value.name = freeze_slice.value.names)
+
+    tar.list <- c(targets, freeze_slice_list)
   } else{
     tar.list <- targets
   }
+
+  #initialize
   df0 <- datatable
   names(df0)[names(df0) == datatable.value.name] <- "value"
 
@@ -136,11 +142,12 @@ ip_fit <- function(datatable, targets,
 
   #Freeze 4 - Slush Slices. Partial (or complete?) targets with min/max bound
   if(!is.null(minmax_slice)) {
-    if(!is.list(minmax_slice)| !is.data.frame(minmax_slice[[1]])) {
-      stop("Parameter minmax_slice must be a list of data frames containing partial min/max targets.")
+    if(!is.data.frame(minmax_slice)) {
+      stop("Parameter minmax_slice must be a data frame containing partial min/max targets.")
     }
 
-    slush.list <- minmax_slice
+    slush.list <- ip_load_slice_a(minmax_slice, slice.value.name = minmax_slice.value.names,  prefix = "mm")
+
     if(show.messages) {
       message(paste(length(slush.list), "Min/max slice targets supplied."))
     }
@@ -196,12 +203,17 @@ ip_fit <- function(datatable, targets,
   for( i in seq_along(tar.list)){
     x <- tar.list[[i]]
 
+    nm <- names(tar.list)[i]
+
     #If it's a target, give it the prefix tar__
     if(i <= length(targets)) {
       names(x)[names(x) %in% target.value.names] <- paste0("tar__", i)
       names(tar.list[[i]]) <- names(x)
-    } else { #Else it's a freeze slice
-      names(x)[names(x) %in% target.value.names] <- paste0("tar__frz_", i)
+    } else if(grepl("__slice", nm, fixed=T)) { #Else it's a freeze slice
+      names(x)[names(x) %in% target.value.names] <- paste0("tar__frz__slice", i)
+      names(tar.list[[i]]) <- names(x)
+    } else {
+      names(x)[names(x) %in% target.value.names] <- paste0("tar__frz__subtl", i)
       names(tar.list[[i]]) <- names(x)
     }
 
@@ -239,15 +251,20 @@ ip_fit <- function(datatable, targets,
     df1 <- df0
     for(i in seq_along(tar.list)){
       x <- tar.list[[i]]
+      nm <- names(tar.list)[i]
 
       #If it's a target
       if(i <= length(targets)) {
         df1 <- df1 %>%
           ip_scale_a(target_series = names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__", i))
-
-      } else { #Else it's a freeze slice
+      } else if(grepl("__slice", nm, fixed=T)) { #Else it's a freeze slice
         df1 <- df1 %>%
-          ip_scale_a(target_series = names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__frz_", i))
+          ip_scale_a(target_series = names(x)[!(names(x) %in% c("value"))],
+                     series_target = paste0("tar__frz__slice", i), series_type = "slice")
+      } else {
+        df1 <- df1 %>%
+          ip_scale_a(target_series = names(x)[!(names(x) %in% c("value"))],
+                     series_target = paste0("tar__frz__subtl", i), series_type = "subtl")
       }
     }
 
@@ -259,13 +276,20 @@ ip_fit <- function(datatable, targets,
     # Save results to a list of dfs
     err.list <- lapply(seq_along(head(tar.list, -1)), function(i){
       x <- tar.list[[i]]
+      nm <- names(tar.list)[i]
+
       #If it's a target
       if(i <= length(targets)) {
         df1 <- df1 %>%
           ip_miss_a(names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__", i))
-      } else { #Else it's a freeze slice
+      } else if(grepl("__slice", nm, fixed=T)) { #Else it's a freeze slice
         df1 <- df1 %>%
-          ip_miss_a(names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__frz_", i))
+          ip_miss_a(names(x)[!(names(x) %in% c("value"))],
+                    series_target = paste0("tar__frz__slice", i), series_type = "slice")
+      } else {
+        df1 <- df1 %>%
+          ip_miss_a(names(x)[!(names(x) %in% c("value"))],
+                    series_target = paste0("tar__frz__subtl", i), series_type = "subtl")
       }
     })
 
