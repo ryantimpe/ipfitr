@@ -5,7 +5,7 @@
 \title{Single target scale function using single data frame.}
 \usage{
 ip_scale_a(datatable, target_series, series_start = "value",
-  series_target = "tar1")
+  series_target = "tar1", series_type = "tar")
 }
 \arguments{
 \item{datatable}{A data frame containing starting values and the target values.}

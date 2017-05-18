@@ -5,7 +5,7 @@
 \title{Compare data frame to target subtotals and calculate absolute error.}
 \usage{
 ip_miss_a(datatable, target_series, series_start = "value",
-  series_target = "tar1")
+  series_target = "tar1", series_type = "tar")
 }
 \arguments{
 \item{datatable}{A data frame of values previously scaled to targets.}

@@ -4,7 +4,8 @@
 \alias{ip_load_slice_a}
 \title{Convert a data frame of slice targets to individual data frames}
 \usage{
-ip_load_slice_a(slice, slice.value.name = "value", drop.names = c("Notes"))
+ip_load_slice_a(slice, slice.value.name = "value", drop.names = c("Notes"),
+  prefix = "frz")
 }
 \arguments{
 \item{slice}{A data frame of assumptions for \code{freeze_slice} or \code{minmax_slice}.}

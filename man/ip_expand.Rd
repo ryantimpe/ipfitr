@@ -36,10 +36,11 @@ Any rows or values not listed, or \code{NA}s, will be scaled as normal.}
 
 \item{freeze_cells.value.name}{The name of the series of iced values in \code{freeze_cells}.}
 
-\item{freeze_slice}{Optional list of data frames containing subtotal targets for the \code{datatable}.
+\item{freeze_slice}{Optional data frame containing subtotal targets for the \code{datatable}.
 Unlike \code{targets}, these data frames can be subsets only containing subtotals for one or more rows.
 Any rows or values not listed, or \code{NA}s, will be scaled as normal.
-Using \code{freeze_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.}
+Using \code{freeze_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.
+Separate elements of a dimension within a single cell using " + " to scale subtotals.}
 
 \item{minmax_cells}{Optional data frame of values with same series columns as \code{datatable}, specifying bounded values to hit in the scaling.
 Provide minimumn and maximum values for a cell to be scaled.
@@ -47,7 +48,7 @@ Any rows or values not listed, or \code{NA}s, will be scaled as normal.}
 
 \item{minmax_cells.value.names}{An array of length 2 of the names of the minimum and maximum values in  \code{minmax_cells}.}
 
-\item{minmax_slice}{Optional list of data frames containing subtotal targets for the \code{datatable}, specifying bounded values to hit in the scaling.
+\item{minmax_slice}{Optional data frame containing subtotal targets for the \code{datatable}, specifying bounded values to hit in the scaling.
 Provide minimumn and maximum values for a slice of the data frame to be scaled.
 Unlike \code{targets}, these data frames can be subsets only containing subtotals for one or more rows.
 Any rows or values not listed, or \code{NA}s, will be scaled as normal.

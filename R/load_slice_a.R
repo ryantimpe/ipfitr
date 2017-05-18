@@ -28,6 +28,8 @@ ip_load_slice_a <- function(slice, slice.value.name = "value", drop.names = c("N
       filter(tar__names == x) %>%
       select(-tar__names)
 
+    dat <- dat[, colSums(is.na(dat))<nrow(dat) | names(dat) %in% slice.value.name]
+
     if(grepl("SUBTOTAL_PRESENT", x, fixed = T)) {
       daty <- as.data.frame(expand.grid(strsplit(as.character(dat[1, ]), " + ", fixed = T), stringsAsFactors = F))
       names(daty) = names(dat)
@@ -38,7 +40,7 @@ ip_load_slice_a <- function(slice, slice.value.name = "value", drop.names = c("N
       dat <- as.data.frame(daty)
     }
 
-    dat <- dat[,colSums(is.na(dat))<nrow(dat) | names(dat) %in% slice.value.name]
+    dat <- dat[, colSums(is.na(dat))<nrow(dat) | names(dat) %in% slice.value.name]
 
     return(dat)
 

@@ -13,16 +13,17 @@
 #' @param freeze_cells Optional data frame of values with same series columns as \code{datatable}, specifying exact values to hit in the scaling.
 #'    Any rows or values not listed, or \code{NA}s, will be scaled as normal.
 #' @param freeze_cells.value.name The name of the series of iced values in \code{freeze_cells}.
-#' @param freeze_slice Optional list of data frames containing subtotal targets for the \code{datatable}.
+#' @param freeze_slice Optional data frame containing subtotal targets for the \code{datatable}.
 #'    Unlike \code{targets}, these data frames can be subsets only containing subtotals for one or more rows.
 #'    Any rows or values not listed, or \code{NA}s, will be scaled as normal.
 #'    Using \code{freeze_slice} for partial targets will increase the number of required iterations for scaling. This may require the user to increase the value of \code{max.iterations}.
+#'    Separate elements of a dimension within a single cell using " + " to scale subtotals.
 #' @param freeze_slice.value.name The name or names of the series of iced values in \code{freeze_slice}.
 #' @param minmax_cells Optional data frame of values with same series columns as \code{datatable}, specifying bounded values to hit in the scaling.
 #'    Provide minimumn and maximum values for a cell to be scaled.
 #'    Any rows or values not listed, or \code{NA}s, will be scaled as normal.
 #' @param minmax_cells.value.names An array of length 2 of the names of the minimum and maximum values in  \code{minmax_cells}.
-#' @param minmax_slice Optional list of data frames containing subtotal targets for the \code{datatable}, specifying bounded values to hit in the scaling.
+#' @param minmax_slice Optional data frame containing subtotal targets for the \code{datatable}, specifying bounded values to hit in the scaling.
 #'    Provide minimumn and maximum values for a slice of the data frame to be scaled.
 #'    Unlike \code{targets}, these data frames can be subsets only containing subtotals for one or more rows.
 #'    Any rows or values not listed, or \code{NA}s, will be scaled as normal.
@@ -74,6 +75,8 @@ ip_fit <- function(datatable, targets,
   minmax_cells.oob <- TRUE
   minmax_slice.oob <- TRUE
 
+  tar.list <- targets
+
   #New for 0.0.0.9005 - Slice targets now supplied as single data frame
   #Freeze 2- Ice Slices
   if(!is.null(freeze_slice)){
@@ -84,14 +87,22 @@ ip_fit <- function(datatable, targets,
 
     freeze_slice_list <- ip_load_slice_a(freeze_slice, slice.value.name = freeze_slice.value.names)
 
-    tar.list <- c(targets, freeze_slice_list)
-  } else{
-    tar.list <- targets
+    tar.list <- c(tar.list, freeze_slice_list)
+  } else {
+    for(i in seq_along(tar.list)){
+      names(tar.list)[i] <- paste0("tar__", i)
+    }
   }
 
   #initialize
   df0 <- datatable
   names(df0)[names(df0) == datatable.value.name] <- "value"
+
+  for(i in seq_along(tar.list)){
+    if(names(tar.list)[i] == "" | is.null(names(tar.list))){
+      names(tar.list)[i] <- paste0("tar__", i)
+    }
+  }
 
   #Freeze 1 - Ice Cells
   if(!is.null(freeze_cells)){
@@ -107,8 +118,11 @@ ip_fit <- function(datatable, targets,
       mutate(value = ifelse(is.na(frz__c), value, 0))
 
     #Since we 0'd out the seed, we should also remove all the iced values from the targets
-    tar.list <- lapply(tar.list, function(x){
+    tar.list2 <- lapply(seq_along(tar.list), function(i){
+      x <- tar.list[[i]]
       names(x)[names(x) %in% c(target.value.names, freeze_slice.value.names)] <- "value"
+
+      nm_tar <- names(tar.list)[i]
 
       ice_target <- freeze_cells %>%
         group_by_(.dots = as.list(names(x)[!(names(x) == "value")])) %>%
@@ -123,8 +137,17 @@ ip_fit <- function(datatable, targets,
 
       if(any(df$value < 0)){stop("Frozen cell values exceed supplied targets. Unable to rationalize.")}
 
+      #For Subtotal slices, need to set them all equal to the minimum
+      if(grepl("frz__subtl", nm_tar, fixed = TRUE)){
+        df <- df %>%
+          mutate(value = min(value, na.rm=T))
+      }
+
       return(df)
     })
+
+    names(tar.list2) <- names(tar.list)
+    tar.list <- tar.list2
   } #End ice cells
 
   #Freeze 3 - Slush Cells. Similar to Ice, but cells have a min/max bound, not specific value
@@ -326,7 +349,12 @@ ip_fit <- function(datatable, targets,
           group_by_(.dots = as.list(names(x))) %>%
           summarize(value = sum(value, na.rm = T)) %>%
           ungroup() %>%
-          mutate(check_slush_s = (value < minmax__s_min) | (value > minmax__s_max))  #Look for OOB
+          mutate(check_slush_min = value < minmax__s_min,
+                 check_slush_max = value > minmax__s_max) %>%
+          rowwise() %>%
+          mutate(check_slush_s = any(c(check_slush_max, check_slush_min), na.rm=T)) %>% #Look for OOB
+          ungroup() %>%
+          select(-check_slush_min, -check_slush_max)
 
         #If any of the bounded cells are OOB,
         # Then proceed to edit the df1 values to smash them into bounds
@@ -387,7 +415,12 @@ ip_fit <- function(datatable, targets,
     if(!is.null(minmax_cells)) {
 
       df1 <- df1 %>%
-        mutate(check_slush_c = (value < minmax__c_min) | (value > minmax__c_max))  #Look for OOB
+        mutate(check_slush_min = value < minmax__c_min,
+               check_slush_max = value > minmax__c_max) %>%
+        rowwise() %>%
+        mutate(check_slush_c = any(c(check_slush_max, check_slush_min), na.rm=T)) %>% #Look for OOB
+        ungroup() %>%
+        select(-check_slush_min, -check_slush_max)
 
       #If any of the bounded cells are OOB, first update the trigger to True
       minmax_cells.oob <- any(df1$check_slush_c, na.rm = T)
