@@ -68,7 +68,6 @@ ip_fit <- function(datatable, targets,
     message("Warning: Supplied targets do not have the same totals. IPF will not converge.")
   }
 
-
   #Set initial conditions
   current.error     <- 10^9
   current.iteration <- 1
@@ -172,7 +171,7 @@ ip_fit <- function(datatable, targets,
     slush.list <- ip_load_slice_a(minmax_slice, slice.value.name = minmax_slice.value.names,  prefix = "mm")
 
     if(show.messages) {
-      message(paste(length(slush.list), "Min/max slice targets supplied."))
+      message(paste(nrow(slush.list), "Min/max slice targets supplied."))
     }
 
     #Freeze 1 inside Freeze 4 - Ice Cells
@@ -326,7 +325,7 @@ ip_fit <- function(datatable, targets,
     }
 
     ###
-    # Freeze 4 - Slush Slice
+    # Freeze 4 - Min/Max Slice
     ###
     #Similar to Ice, but cells have a min/max bound, not specific value
     #Calculate AFTER error, as this is its own deal breaker. If everything is in bounds, no problem
@@ -336,17 +335,29 @@ ip_fit <- function(datatable, targets,
       for(i in seq_along(slush.list)) {
         x <- slush.list[[i]]
 
-        #Roll-up version of df1 to check slush targets. Use generic target names for easier programmign
-        df1_slushs <- df1
-        names(df1_slushs)[names(df1_slushs) == paste0("minmax__s_min", i)] <- "minmax__s_min"
-        names(df1_slushs)[names(df1_slushs) == paste0("minmax__s_max", i)] <- "minmax__s_max"
+        if(grepl("__subtl", names(slush.list)[i], fixed = T)){
+          type <- "subtl"
+        } else{
+          type <- "slice"
+        }
 
+        #Roll-up version of df1 to check slush targets. Use generic target names for easier programming
+        names(df1)[names(df1) == paste0("minmax__s_min", i)] <- "minmax__s_min"
+        names(df1)[names(df1) == paste0("minmax__s_max", i)] <- "minmax__s_max"
+
+        df1_slushs <- df1
         names(x)[names(x) == paste0("minmax__s_min", i)] <- "minmax__s_min"
         names(x)[names(x) == paste0("minmax__s_max", i)] <- "minmax__s_max"
 
         df1_slushs <- df1_slushs %>%
           #Group by names of the target, INCLUDING the target value names, since they are the same for each group element
-          group_by_(.dots = as.list(names(x))) %>%
+          do(
+            if(type == "subtl"){
+              group_by_(., .dots = as.list(c("minmax__s_min", "minmax__s_max")))
+            } else {
+              group_by_(., .dots = as.list(names(x)))
+            }
+          ) %>%
           summarize(value = sum(value, na.rm = T)) %>%
           ungroup() %>%
           mutate(check_slush_min = value < minmax__s_min,
@@ -374,22 +385,25 @@ ip_fit <- function(datatable, targets,
           df1_slushs <- df1_slushs %>%
             #Allow for no lower bound
             mutate(minmax__s_min = ifelse(is.na(minmax__s_min) & !is.na(minmax__s_max), 0 , minmax__s_min)) %>%
-            mutate(value_o_slush = ifelse((value >= minmax__s_min) | is.na(minmax__s_min), value,
+            mutate(
+                  value_o_slush = ifelse(is.na(minmax__s_min) & is.na(minmax__s_max), NA, ifelse((value >= minmax__s_min) | is.na(minmax__s_min), value,
                                   #Allow for no upper bound
                                   ifelse(!is.na(minmax__s_max), minmax__s_min + (minmax.smash.param)*(minmax__s_max - minmax__s_min),
-                                         (1+minmax.smash.param)*minmax__s_min)),
+                                         (1+minmax.smash.param)*minmax__s_min))),
                    value_o_slush = ifelse((value_o_slush <= minmax__s_max) | is.na(minmax__s_max), value_o_slush, minmax__s_max - (minmax.smash.param)*(minmax__s_max - minmax__s_min))
             ) %>%
-            # #New values for the slush-targeted values
-            # mutate(value_o_slush = ifelse((value >= minmax__s_min), value, minmax__s_min + (minmax.smash.param)*(minmax__s_max - minmax__s_min)),
-            #        value_o_slush = ifelse((value_o_slush <= minmax__s_max), value_o_slush, minmax__s_max - (minmax.smash.param)*(minmax__s_max - minmax__s_min))
-            # ) %>%
             #How much the remaining values have to move to compensate for that shift
             mutate(value_o_remainder = ifelse(is.na(value_o_slush), value, NA),
                    ratio_remainder = (sum(value, na.rm = T) - sum(value_o_slush, na.rm=T))/sum(value_o_remainder, na.rm=T)) %>%
             #Combine into a single ratio to apply to data cube
             mutate(ratio = ifelse(is.na(value_o_slush), ratio_remainder, value_o_slush/value)) %>%
-            select(-value, -minmax__s_min, -minmax__s_max, -value_o_slush, -value_o_remainder, -ratio_remainder)
+            do(
+              if(type == "subtl"){
+                select(., -value, -value_o_slush, -value_o_remainder, -ratio_remainder)
+              } else {
+                select(., -value, -minmax__s_min, -minmax__s_max, -value_o_slush, -value_o_remainder, -ratio_remainder)
+              }
+            )
 
           #Apply this df of ratios to our main data frame
           df1 <- df1 %>%
@@ -400,13 +414,16 @@ ip_fit <- function(datatable, targets,
 
         }
 
+        names(df1)[names(df1) == "minmax__s_min"] <- paste0("minmax__s_min", i)
+        names(df1)[names(df1) == "minmax__s_max"] <- paste0("minmax__s_max", i)
+
         df1_slushs <- NULL
       }
 
     } #End Freeze 4
 
     ###
-    # Freeze 3 - Slush Cells
+    # Freeze 3 - Min/Max Cells
     ###
     #Similar to Ice, but cells have a min/max bound, not specific value
     #Calculate AFTER error, as this is its own deal breaker. If everything is in bounds, no problem
