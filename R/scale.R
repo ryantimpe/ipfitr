@@ -53,13 +53,15 @@ ip_scale_a <- function(datatable, target_series, series_start = "value", series_
   target_series[target_series == series_target] <- "tar_temp"
 
   datatable <- datatable %>%
+    ungroup() %>%
     do(
-      if(series_type != "subtl") {
-        group_by_(., .dots = as.list(target_series[!(target_series %in% c(series_target))]))
-      } else {
+      if(series_type == "subtl") {
         group_by_(., .dots = as.list("tar_temp"))
+      } else {
+        group_by_(., .dots = as.list(target_series[!(target_series %in% c(series_target))]))
       }
     ) %>%
+    # group_by_(.dots = as.list(target_series[!(target_series %in% c(series_target))])) %>%
     mutate(shr = ifelse(value_temp == 0 | is.na(value_temp), 0, value_temp/sum(value_temp, na.rm=T))) %>%
     ungroup() %>%
     #Discount factor for any missing targets

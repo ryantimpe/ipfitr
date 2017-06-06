@@ -52,9 +52,18 @@ ip_fit <- function(datatable, targets,
                    save.tars = TRUE, show.messages = TRUE) {
 
   #Warnings
-  if(is.null(targets) | !is.list(targets) | length(targets) == 1) {stop("Targets must be a list of at least two data frames.")}
+  if(is.null(targets) | !is.list(targets) | !is.data.frame(targets[[1]])) {
+    stop("Targets must be a list of data frames.")
+    }
 
-  if(show.messages) {
+  #Single Target
+  if(length(targets) == 1) {
+    if(show.messages) {
+      message(paste("Initializing IPF...",
+                    "Only 1 target supplied. Data will be scaled to single target, along with freeze and minmax conditions."))
+    }
+    targets[[2]] <- targets[[1]]
+  } else {
     message(paste("Initializing IPF...", length(targets), "targets supplied."))
   }
 
