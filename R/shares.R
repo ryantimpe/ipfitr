@@ -37,7 +37,7 @@ ip_shares_transform <- function(datatable, target, series_start = "value", serie
     x <- tars.list[[i]] %>%
       select(-share__of)
 
-    share__of <- strsplit(tars.list[[i]]$share__of[1], " + ")[[1]]
+    share__of <- strsplit(tars.list[[i]]$share__of[1], split=sep)[[1]]
 
     dat <- datatable  %>%
       group_by_(.dots = as.list(names(x %>% select(-share)))) %>%
@@ -50,6 +50,8 @@ ip_shares_transform <- function(datatable, target, series_start = "value", serie
       mutate(value = ifelse(!is.na(share), value_new,
                             (sum(value_start, na.rm=T) - sum(value_new, na.rm=T)) * value_start / sum(value_start * is.na(share), na.rm=T))) %>%
       select(-share, -dplyr::starts_with("value_"))
+
+    names(dat)[names(dat) == "value"] <- paste0("tar_shares__", i)
 
   })
 
