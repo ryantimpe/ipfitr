@@ -15,10 +15,13 @@ ip_growth_transform <- function(datatable, target, series_start = "value", serie
                                 growth_distance = 1) {
 
   names(datatable)[names(datatable) == series_start] <- "value"
-  names(target)[names(target) == series_target] <- "share"
-  names(target)[names(target) == series_share_of] <- "share__of"
+  names(target)[names(target) == series_target] <- "growth"
+  names(target)[names(target) == series_growth_over] <- "growth__over"
 
   tars <- target
+
+  # datatable <- datatable %>%
+  #   mutate(value = ifelse(value == 0, NA, value))
 
   #Add column for grouping - unique sets of series included
   tars$type <- apply(tars, 1, function(x){
@@ -63,13 +66,14 @@ ip_growth_transform <- function(datatable, target, series_start = "value", serie
       filter(keep_growth > 0) %>%
       select(-value_start, -value_base, -growth, -growth_start, -growth_new, -cum_new, -keep_growth)
 
-    names(dat)[names(dat) == "value_new"] <- paste0("tar_growth__", i)
+    names(dat)[names(dat) == "value_new"] <- paste0("tar__growth__", i)
 
     return(dat)
 
   })
 
-  tars.values <- bind_rows(tars.values)
+  #tars.values <- bind_rows(tars.values)
+  #Return the list of DFs
 
   return(tars.values)
 }

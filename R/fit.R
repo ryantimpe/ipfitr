@@ -32,6 +32,7 @@
 #' @param minmax.smash.param Numeric value of  0 < x < 1. Following an out-of-bounds occurence for \code{minmax_cells}, the \code{minmax.smash.param} is the additional value added to the scaled value to bring it back into bounds.
 #' Values close to 0 bind the value to the violated bound, while close to 1 bind the value to the other bound.
 #' Values closer to0 will require more iterations to complete.
+#' @param growth_targets A data frame of cell or slice targets with growth rates over listed dimensions. See \code{ipfitr::ip_growth_transform} for detail.
 #' @return A dataframe with the same dimensionality as \code{datatable}, with all values scaled to the subtotals specified in each data frame in \code{targets}.
 #' @examples
 #' tar1 <- data.frame(x = letters[1:2], value = c(50, 50))
@@ -49,6 +50,7 @@ ip_fit <- function(datatable, targets,
                    minmax_cells = NULL, minmax_cells.value.names = c("value_min", "value_max"),
                    minmax_slice = NULL, minmax_slice.value.names = c("value_min", "value_max"),
                    minmax.smash.param = 1/3,
+                   growth_targets = NULL,
                    save.tars = TRUE, show.messages = TRUE) {
 
   #Warnings
@@ -263,6 +265,14 @@ ip_fit <- function(datatable, targets,
     }
   }
 
+  # Growth targets
+  # These targets are for structure. The actual values come later
+  if(!is.null(growth_targets)){
+    if(show.messages) {
+      message(paste(nrow(growth_targets), "Growth rate cell/slice targets supplied."))
+    }
+  }
+
   #IPF Loop
   while((current.error > max.error | minmax_cells.oob == TRUE | minmax_slice.oob == TRUE) &
         current.iteration <= max.iterations ) {
@@ -300,29 +310,74 @@ ip_fit <- function(datatable, targets,
     }
 
     ###
+    # Growth targets
+    ###
+    if(!is.null(growth_targets)){
+      df1 <- df1[, !grepl("tar__growth__", names(df1), fixed = T)] #Remove previous yy value targets
+
+      #Create list of target dataframes, with growth rates converted to levels
+      growth_tars_current <- df1 %>%
+        ip_growth_transform(growth_targets)
+
+      for(i in seq_along(growth_tars_current)) {
+        names(growth_tars_current)[i] <- paste0("tar__growth__", i)
+      }
+
+      #Scale each growth value target
+      for(i in seq_along(growth_tars_current)){
+        x <- growth_tars_current[[i]]
+
+        df1 <- df1 %>%
+          left_join(x, by = names(x)[!(names(x) %in% paste0("tar__growth__", i))]) %>%
+          ip_scale_a(target_series = names(x)[!(names(x) %in% paste0("tar__growth__", i))],
+                     series_target = paste0("tar__growth__", i))
+      }
+
+    } else {
+      growth_tars_current <- NULL
+    }
+
+    ###
     #Error
     ###
 
     #For each target (except final one), calculate the error over each element in the target,
     # Save results to a list of dfs
-    err.list <- lapply(seq_along(head(tar.list, -1)), function(i){
+    #err.list <- lapply(seq_along(head(tar.list, -1)), function(i){
+    err.list <- lapply(seq_along(tar.list), function(i){
       x <- tar.list[[i]]
       nm <- names(tar.list)[i]
 
       #If it's a target
-      if(i <= length(targets)) {
-        df1 <- df1 %>%
+      if(i <= length(targets) | grepl("__growth", nm, fixed=T)) {
+        df <- df1 %>%
           ip_miss_a(names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__", i))
       } else if(grepl("__slice", nm, fixed=T)) { #Else it's a freeze slice
-        df1 <- df1 %>%
+        df <- df1 %>%
           ip_miss_a(names(x)[!(names(x) %in% c("value"))],
                     series_target = paste0("tar__frz__slice", i), series_type = "slice")
+      # } else if(grepl("__subtl", nm, fixed=T)){
       } else {
-        df1 <- df1 %>%
+        df <- df1 %>%
           ip_miss_a(names(x)[!(names(x) %in% c("value"))],
                     series_target = paste0("tar__frz__subtl", i), series_type = "subtl")
       }
     })
+
+    #Growth error
+    if(!is.null(growth_targets)){
+
+      err.list.growth <- lapply(seq_along(growth_tars_current), function(i){
+        x <- growth_tars_current[[i]]
+        nm <- names(growth_tars_current)[i]
+
+        df <- df1 %>%
+          ip_miss_a(names(x)[!(names(x) %in% c("value"))], series_target = paste0("tar__growth__", i))
+      })
+
+      err.list <- c(err.list, err.list.growth)
+
+    }
 
     #For each error df, sum the error column, then sum those sums for total abs error
     current.error <- sum(sapply(err.list, function(x){

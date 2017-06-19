@@ -11,7 +11,8 @@ ip_fit(datatable, targets, datatable.value.name = "value",
   minmax_cells = NULL, minmax_cells.value.names = c("value_min",
   "value_max"), minmax_slice = NULL,
   minmax_slice.value.names = c("value_min", "value_max"),
-  minmax.smash.param = 1/3, save.tars = TRUE, show.messages = TRUE)
+  minmax.smash.param = 1/3, growth_targets = NULL, save.tars = TRUE,
+  show.messages = TRUE)
 }
 \arguments{
 \item{datatable}{A data frame of values to be scaled to targets.}
@@ -51,6 +52,8 @@ Using \code{minmax_slice} for partial targets will increase the number of requir
 \item{minmax.smash.param}{Numeric value of  0 < x < 1. Following an out-of-bounds occurence for \code{minmax_cells}, the \code{minmax.smash.param} is the additional value added to the scaled value to bring it back into bounds.
 Values close to 0 bind the value to the violated bound, while close to 1 bind the value to the other bound.
 Values closer to0 will require more iterations to complete.}
+
+\item{growth_targets}{A data frame of cell or slice targets with growth rates over listed dimensions. See \code{ipfitr::ip_growth_transform} for detail.}
 
 \item{datatable.value.names}{The name of the series in \code{datatable} containing the values to be scaled.}
 
