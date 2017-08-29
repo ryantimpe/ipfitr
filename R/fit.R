@@ -316,8 +316,14 @@ ip_fit <- function(datatable, targets,
       df1 <- df1[, !grepl("tar__growth__", names(df1), fixed = T)] #Remove previous yy value targets
 
       #Create list of target dataframes, with growth rates converted to levels
-      growth_tars_current <- df1 %>%
-        ip_growth_transform(growth_targets)
+      growth_tars_current_df <- df1
+
+      #Need to add back in frozen cells for Growth calc
+      if(!is.null(freeze_cells)){
+        growth_tars_current_df <- growth_tars_current_df %>%
+          mutate(value = ifelse(is.na(frz__c), value, frz__c))
+      }
+      growth_tars_current <- growth_tars_current_df %>% ip_growth_transform(growth_targets)
 
       for(i in seq_along(growth_tars_current)) {
         names(growth_tars_current)[i] <- paste0("tar__growth__", i)

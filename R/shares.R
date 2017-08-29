@@ -49,9 +49,8 @@ ip_shares_transform <- function(datatable, target, series_start = "value", serie
       mutate(value_new = share * sum(value_start, na.rm=T)) %>%
       mutate(value = ifelse(!is.na(share), value_new,
                             (sum(value_start, na.rm=T) - sum(value_new, na.rm=T)) * value_start / sum(value_start * is.na(share), na.rm=T))) %>%
-      select(-share, -dplyr::starts_with("value_"))
-
-    names(dat)[names(dat) == "value"] <- paste0("tar_shares__", i)
+      select(-share, -dplyr::starts_with("value_")) #%>%
+      #rename_(.dots = setNames("value", paste0("tar_shares__", i)))
 
   })
 

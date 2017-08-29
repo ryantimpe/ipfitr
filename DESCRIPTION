@@ -4,13 +4,13 @@ Title: Iterative Proportion Fitting for the Tidyverse
 Imports: 
     dplyr, 
     tidyr
-Version: 0.0.0.9010
+Version: 0.0.0.9021
 Author: Ryan Timpe <ryan.timpe at gmail.com>
 Authors@R: c(
     person("Ryan", "Timpe", email = "ryan.timpe@gmail.com", role = c("aut", "cre")),
     person("International Planning & Research Corp", email = "ryan.timpe@iprcorp.com", role = "cph")
     )
-Description: A tool for using iterative proportion fitting within the 'tidyverse' pipe framework. 
+Description: A tool for using iterative proportion fitting within the 'tidyverse' framework. 
     Impute crosshatch values in a large data frame, tying to multiple target data frames and boundary conditions.
 License: GPL-3
 Encoding: UTF-8
