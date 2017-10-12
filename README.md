@@ -32,8 +32,6 @@ devtools::install_github("ryantimpe", "ipfitr")
 
 ## Deployment
 
-The Windows batch file RunDatasaur.bat is two lines telling Windows to run the R script using R 3.4. In future releases, this will be moved to AWS.
-
 ## Built With
 
 * [R](https://www.r-project.org/) - R
