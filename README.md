@@ -27,7 +27,7 @@ The functions in ipfitr can be run independently, but are more useful as part of
 
 ``` r
 install.packages(devtools)
-devtools::install_github("ryantimpe", "ipfitr")
+devtools::install_github("ryantimpe/ipfitr")
 ```
 
 ## Deployment
