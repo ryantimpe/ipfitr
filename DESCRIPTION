@@ -3,7 +3,7 @@ Type: Package
 Title: Iterative Proportion Fitting for the Tidyverse
 Imports: 
     tidyverse (>= 1.1.1)
-Version: 0.0.0.9023
+Version: 0.0.0.9100
 Author: Ryan Timpe <ryan.timpe at gmail.com>
 Authors@R: c(
     person("Ryan", "Timpe", email = "ryan.timpe@gmail.com", role = c("aut", "cre")),
