@@ -135,8 +135,7 @@ check_targets <- function(targets, seed = NULL,
 
   if(is.null(seed)){ seed.checks.op <- list()} else {
 
-    message("Checking each target against the seed... This will look for 0 or NA values over seed subtotals and compare them with the targets.
-            If the seed has a 0 subtotal, then the matching target should also be 0 (IPF cannot scale zero to a non-zero).")
+    message("Checking each target against the seed... This will look for 0 or NA values over seed subtotals and compare them with the targets.\nIf the seed has a 0 subtotal, then the matching target should also be 0 (IPF cannot scale zero to a non-zero).")
 
     check_seed_a <- function(TarA, SeedA){
       dims.in.tar <- names(TarA)
@@ -166,7 +165,7 @@ check_targets <- function(targets, seed = NULL,
     if(length(seed.checks.op) == 0){
       message("\nThe seed and targets line up! No issues here.\n===================================")
     } else {
-      message("\nZero subtotals found in seed where targets have values. IPF will not converge. See output.\n===================================")
+      message("\n!!! Zero subtotals found in seed where targets have values. IPF will not converge. See output.\n===================================")
     }
 
   } #End seed check
