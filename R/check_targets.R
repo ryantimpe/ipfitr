@@ -65,64 +65,69 @@ check_targets <- function(targets, seed = NULL,
 
   names(tar.list) <- paste0("Tar", 1:num.tars)
 
-  tar.combo <- data.frame(TarA = c(), TarB = c(), stringsAsFactors = FALSE)
-  for(i in num.tars:2){
-    for(j in (i-1):1){
-      tar.combo <- tar.combo %>% bind_rows(
-        data.frame(TarA = paste0("Tar", j), TarB = paste0("Tar", i), stringsAsFactors = FALSE)
-      )
-    }
-  }
-  tar.combo <- tar.combo %>%
-    arrange(TarA, TarB)
-
-  combine_tars_a <- function(tara, tarb, list_of_tars){
-    TarA <- list_of_tars[[tara]]
-    TarB <- list_of_tars[[tarb]]
-
-    common.dims <- names(TarA)[names(TarA) %in% names(TarB)]
-    common.dims <- common.dims[!(common.dims %in% target.value.names)]
-
-    names(TarA)[names(TarA) %in% target.value.names] <- ".value"
-    names(TarB)[names(TarB) %in% target.value.names] <- ".value"
-
-    combo.tar <- TarA %>%
-      mutate(.dftype = "Checker") %>% #This cleans up joins for targets with no common series
-      group_by_(.dots = as.list(c(".dftype", common.dims))) %>%
-      summarize(TarA = sum(.value, na.rm=TRUE)) %>%
-      ungroup() %>%
-      left_join(
-        TarB %>%
-          mutate(.dftype = "Checker")  %>%
-          group_by_(.dots = as.list(c(".dftype", common.dims))) %>%
-          summarize(TarB = sum(.value, na.rm=TRUE)) %>%
-          ungroup() ,
-        by = c(".dftype", common.dims)
-      ) %>%
-      mutate(Check_value = (TarA - TarB),
-             Check_trigger = abs(Check_value) > max.error) %>%
-      select(-.dftype)
-
-    names(combo.tar)[names(combo.tar) == "TarA"] <- tara
-    names(combo.tar)[names(combo.tar) == "TarB"] <- tarb
-
-    return(combo.tar)
-  }
-
-  target.checks <- purrr::pmap(list(a = tar.combo$TarA, b = tar.combo$TarB),
-                                  function(a, b){combine_tars_a(a, b, tar.list)})
-
-  target.checks.names <- tar.combo %>% mutate(.name = paste(TarA, " & ", TarB)) %>% pull
-  names(target.checks) <- target.checks.names
-
-  #Only keep dfs with violations
-  target.checks.op <- target.checks[purrr::map_lgl(target.checks, function(x){any(x$Check_trigger)})]
-
-  if(length(target.checks.op) == 0) {
-    message("\nTargets are good! No issues here.\n===================================")
+  if(length(tar.list) <= 1){
+    target.checks.op <- list()
   } else {
-    message("\nAt least one violation has been found within the targets. See output.\n===================================")
-  }
+    tar.combo <- data.frame(TarA = c(), TarB = c(), stringsAsFactors = FALSE)
+    for(i in num.tars:2){
+      for(j in (i-1):1){
+        tar.combo <- tar.combo %>% bind_rows(
+          data.frame(TarA = paste0("Tar", j), TarB = paste0("Tar", i), stringsAsFactors = FALSE)
+        )
+      }
+    }
+    tar.combo <- tar.combo %>%
+      arrange(TarA, TarB)
+
+    combine_tars_a <- function(tara, tarb, list_of_tars){
+      TarA <- list_of_tars[[tara]]
+      TarB <- list_of_tars[[tarb]]
+
+      common.dims <- names(TarA)[names(TarA) %in% names(TarB)]
+      common.dims <- common.dims[!(common.dims %in% target.value.names)]
+
+      names(TarA)[names(TarA) %in% target.value.names] <- ".value"
+      names(TarB)[names(TarB) %in% target.value.names] <- ".value"
+
+      combo.tar <- TarA %>%
+        mutate(.dftype = "Checker") %>% #This cleans up joins for targets with no common series
+        group_by_(.dots = as.list(c(".dftype", common.dims))) %>%
+        summarize(TarA = sum(.value, na.rm=TRUE)) %>%
+        ungroup() %>%
+        left_join(
+          TarB %>%
+            mutate(.dftype = "Checker")  %>%
+            group_by_(.dots = as.list(c(".dftype", common.dims))) %>%
+            summarize(TarB = sum(.value, na.rm=TRUE)) %>%
+            ungroup() ,
+          by = c(".dftype", common.dims)
+        ) %>%
+        mutate(Check_value = (TarA - TarB),
+               Check_trigger = abs(Check_value) > max.error) %>%
+        select(-.dftype)
+
+      names(combo.tar)[names(combo.tar) == "TarA"] <- tara
+      names(combo.tar)[names(combo.tar) == "TarB"] <- tarb
+
+      return(combo.tar)
+    }
+
+    target.checks <- purrr::pmap(list(a = tar.combo$TarA, b = tar.combo$TarB),
+                                 function(a, b){combine_tars_a(a, b, tar.list)})
+
+    target.checks.names <- tar.combo %>% mutate(.name = paste(TarA, " & ", TarB)) %>% pull
+    names(target.checks) <- target.checks.names
+
+    #Only keep dfs with violations
+    target.checks.op <- target.checks[purrr::map_lgl(target.checks, function(x){any(x$Check_trigger)})]
+
+    if(length(target.checks.op) == 0) {
+      message("\nTargets are good! No issues here.\n===================================")
+    } else {
+      message("\nAt least one violation has been found within the targets. See output.\n===================================")
+    }
+  } #End target check
+
 
   ####
   # Check the targets against the seed ----
