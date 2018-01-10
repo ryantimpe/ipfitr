@@ -1,9 +1,13 @@
 Package: ipfitr
 Type: Package
 Title: Iterative Proportion Fitting for the Tidyverse
-Imports: 
-    tidyverse (>= 1.1.1)
-Version: 0.0.0.9100
+Depends: 
+    dplyr (>= 0.7.0),
+    tidyr (>= 0.7.0),
+    purrr (>= 0.2.4),
+    magrittr (>= 1.5),
+    tibble (>= 1.4.0)
+Version: 0.0.0.9101
 Author: Ryan Timpe <ryan.timpe at gmail.com>
 Authors@R: c(
     person("Ryan", "Timpe", email = "ryan.timpe@gmail.com", role = c("aut", "cre")),
