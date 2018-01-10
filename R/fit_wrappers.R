@@ -24,7 +24,7 @@ ip_fit_sl <- function(datatable, targets, assumptions,
                    assumption.drop.names = c("Notes"),
                    max.error = 0.01, max.iterations = 25,
                    minmax.smash.param = 1/3,
-                   save.tars = TRUE, show.messages = TRUE) {
+                   save.tars = FALSE, show.messages = TRUE) {
 
   assumptions_pro <- ip_load_assumptions(assumptions,
                                          freeze.name = assumption.value.names[1], minmax.name = assumption.value.names[2:3],

@@ -51,7 +51,7 @@ ip_fit <- function(datatable, targets,
                    minmax_slice = NULL, minmax_slice.value.names = c("value_min", "value_max"),
                    minmax.smash.param = 1/3,
                    growth_targets = NULL,
-                   save.tars = TRUE, show.messages = TRUE) {
+                   save.tars = FALSE, show.messages = TRUE) {
 
   #Warnings
   if(is.null(targets) | !is.list(targets) | !is.data.frame(targets[[1]])) {
