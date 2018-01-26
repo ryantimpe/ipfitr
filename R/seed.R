@@ -29,6 +29,22 @@ ip_create_seed <- function(tars, names.exclude = c("value"), value.set = 1, valu
   series.list <- series.list[!(names(series.list) %in% names.exclude)]
   series.list <- series.list[!(duplicated(series.list))]
 
+  # This take a long time and creates an unnecessarily large data frame if there are many dims.
+  # Check with user
+
+  if(length(series.list >= 8) & length(unlist(series.list)) > 50){
+    message("Seeds with many series or many elements in each series will take a long time to create.\nThe resulting data frame will be very large, likely containing many rows that will be 0 in the final IPF output.")
+    message("It might be more efficient to supply a seed to the ip_fit() function.")
+    continue_seed_creation <- readline("Are you sure you want to continue? ")
+    continue_seed_creation <- tolower(substr(continue_seed_creation, 1, 1))
+  } else {
+    continue_seed_creation <- "y"
+  }
+
+  if(continue_seed_creation != "y") {
+    stop("Stopped by user. Try supplying your own seed with existing data.")
+  }
+
   #Create DF, dropping the excluded series before creation
   df <- expand.grid(series.list)
   df <- df %>%
