@@ -16,7 +16,8 @@
 #' tar2 <- data.frame(y = letters[3:5], value = runif(3))
 #' ip_create_seed(list(tar1, tar2))
 #' @export
-ip_create_seed <- function(tars, names.exclude = c("value"), value.set = 1, value.name = "value"){
+ip_create_seed <- function(tars, names.exclude = c("value"), value.set = 1, value.name = "value",
+                           override.warning = FALSE){
 
   #Warnings
   if(is.null(tars) | !is.list(tars) | length(tars) == 1) {stop("Targets must be a list of at least two data frames")}
@@ -42,7 +43,7 @@ ip_create_seed <- function(tars, names.exclude = c("value"), value.set = 1, valu
   # This take a long time and creates an unnecessarily large data frame if there are many dims.
   # Check with user
 
-  if(length(series.list) >= 10 & length(unlist(series.list)) > 100){
+  if(length(series.list) >= 10 & length(unlist(series.list)) > 100 & !override.warning){
     message("Seeds with many series or many elements in each series will take a long time to create.\nThe resulting data frame will be very large, likely containing many rows that will be 0 in the final IPF output.")
     message("It might be more efficient to supply a seed to the ip_fit() function.")
     continue_seed_creation <- readline("Are you sure you want to continue? ")

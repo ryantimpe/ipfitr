@@ -45,6 +45,7 @@
 #' @export
 ip_expand <- function(targets, target.value.names = "value",
                    names.exclude = c("value"), value.set = 1, value.name = "value",
+                   override.warning = FALSE,
                    max.error = 0.01, max.iterations = 25,
                    freeze_cells = NULL, freeze_cells.value.name = "value",
                    freeze_slice = NULL, freeze_slice.value.names = "value",
@@ -54,7 +55,8 @@ ip_expand <- function(targets, target.value.names = "value",
                    save.tars = TRUE, show.messages = TRUE) {
 
   df <- ip_create_seed(targets, names.exclude = names.exclude,
-                       value.set = value.set, value.name = value.name) %>%
+                       value.set = value.set, value.name = value.name,
+                       override.warning = override.warning) %>%
     ip_fit(targets, datatable.value.name = value.name, target.value.names = target.value.names,
            max.error = max.error, max.iterations = max.iterations,
            freeze_cells = freeze_cells, freeze_cells.value.name = freeze_cells.value.name,
