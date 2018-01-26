@@ -42,7 +42,7 @@ ip_create_seed <- function(tars, names.exclude = c("value"), value.set = 1, valu
   # This take a long time and creates an unnecessarily large data frame if there are many dims.
   # Check with user
 
-  if(length(series.list >= 8) & length(unlist(series.list)) > 50){
+  if(length(series.list) >= 10 & length(unlist(series.list)) > 100){
     message("Seeds with many series or many elements in each series will take a long time to create.\nThe resulting data frame will be very large, likely containing many rows that will be 0 in the final IPF output.")
     message("It might be more efficient to supply a seed to the ip_fit() function.")
     continue_seed_creation <- readline("Are you sure you want to continue? ")
