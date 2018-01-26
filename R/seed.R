@@ -23,11 +23,21 @@ ip_create_seed <- function(tars, names.exclude = c("value"), value.set = 1, valu
 
   #List of all unique values in each series
   series.list <- lapply(tars, function(x){
-    lapply(x, unique)
+    dat <- x[, names(x)[!(names(x) %in% names.exclude)]]
+    lapply(dat, unique)
   })
   series.list <- unlist(series.list, recursive = F)
-  series.list <- series.list[!(names(series.list) %in% names.exclude)]
-  series.list <- series.list[!(duplicated(series.list))]
+
+  series.list <- sapply(unique(names(series.list)), function(x){
+    srs.lst <- series.list[which(names(series.list) == x)]
+
+    #do I want them all???
+    # unique(unlist(srs.lst))
+
+    #Or the the common ones? I think common
+    Reduce(intersect, srs.lst)
+
+  }, USE.NAMES = TRUE)
 
   # This take a long time and creates an unnecessarily large data frame if there are many dims.
   # Check with user
