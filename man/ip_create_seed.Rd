@@ -5,7 +5,7 @@
 \title{Create initial dataframe of all unique target series.}
 \usage{
 ip_create_seed(tars, names.exclude = c("value"), value.set = 1,
-  value.name = "value")
+  value.name = "value", override.warning = FALSE)
 }
 \arguments{
 \item{tars}{A list of data frames containing series to expand.}

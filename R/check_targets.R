@@ -103,7 +103,8 @@ check_targets <- function(targets, seed = NULL,
           by = c(".dftype", common.dims)
         ) %>%
         mutate(Check_value = (TarA - TarB),
-               Check_trigger = abs(Check_value) > max.error) %>%
+               Check_trigger = abs(Check_value) > max.error,
+               Check_trigger = ifelse(is.na(Check_trigger), FALSE, Check_trigger)) %>%
         select(-.dftype)
 
       names(combo.tar)[names(combo.tar) == "TarA"] <- tara
@@ -119,7 +120,7 @@ check_targets <- function(targets, seed = NULL,
     names(target.checks) <- target.checks.names
 
     #Only keep dfs with violations
-    target.checks.op <- target.checks[purrr::map_lgl(target.checks, function(x){any(x$Check_trigger)})]
+    target.checks.op <- target.checks[purrr::map_lgl(target.checks, function(x){any(x$Check_trigger, na.rm=TRUE)})]
 
     if(length(target.checks.op) == 0) {
       message("\nTargets are good! No issues here.\n===================================")

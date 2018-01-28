@@ -5,8 +5,8 @@
 \title{Wrapper function to create seed and perform iterative proportion fitting from N targets.}
 \usage{
 ip_expand(targets, target.value.names = "value", names.exclude = c("value"),
-  value.set = 1, value.name = "value", max.error = 0.01,
-  max.iterations = 25, freeze_cells = NULL,
+  value.set = 1, value.name = "value", override.warning = FALSE,
+  max.error = 0.01, max.iterations = 25, freeze_cells = NULL,
   freeze_cells.value.name = "value", freeze_slice = NULL,
   freeze_slice.value.names = "value", minmax_cells = NULL,
   minmax_cells.value.names = c("value_min", "value_max"),

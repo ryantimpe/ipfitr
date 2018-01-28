@@ -8,7 +8,7 @@ ip_fit_sl(datatable, targets, assumptions, datatable.value.name = "value",
   target.value.names = "value", assumption.value.names = c("value",
   "value_min", "value_max"), assumption.drop.names = c("Notes"),
   max.error = 0.01, max.iterations = 25, minmax.smash.param = 1/3,
-  save.tars = TRUE, show.messages = TRUE)
+  save.tars = FALSE, show.messages = TRUE)
 }
 \arguments{
 \item{datatable}{A data frame of values to be scaled to targets.}

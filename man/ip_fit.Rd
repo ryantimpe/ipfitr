@@ -11,7 +11,7 @@ ip_fit(datatable, targets, datatable.value.name = "value",
   minmax_cells = NULL, minmax_cells.value.names = c("value_min",
   "value_max"), minmax_slice = NULL,
   minmax_slice.value.names = c("value_min", "value_max"),
-  minmax.smash.param = 1/3, growth_targets = NULL, save.tars = TRUE,
+  minmax.smash.param = 1/3, growth_targets = NULL, save.tars = FALSE,
   show.messages = TRUE)
 }
 \arguments{
