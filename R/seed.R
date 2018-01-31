@@ -24,7 +24,9 @@ ip_create_seed <- function(tars, names.exclude = c("value"), value.set = 1, valu
 
   #List of all unique values in each series
   series.list <- lapply(tars, function(x){
-    dat <- x[, names(x)[!(names(x) %in% names.exclude)]]
+    dat <- as.data.frame(x[, names(x)[!(names(x) %in% names.exclude)]],
+                         stringsAsFactors = FALSE)
+    names(dat) <- names(x)[!(names(x) %in% names.exclude)]
     lapply(dat, unique)
   })
   series.list <- unlist(series.list, recursive = F)
