@@ -47,6 +47,8 @@ ip_load_mask_a <- function(mask_raw, mask.value.name = "mask",
 #' Apply a layer of multiplicative masks to a seed.
 #'
 #' Apply a layer of multiplicative masks to a seed. This will apply the mask to seed on all rows that match supplied elements.
+#' Without changing the original seed, the mask is used to proportionally raise, lower, or zero seed values. This is an easy mechanism for flavoring the seed with research and manual edits.
+#' The mask is an alternative to line-item changes using \code{mutate()} + \code{if_else()}.
 #'
 #' @param seed A seed data frame, either supplied by the user or created using \code{ip_create_seed()}.
 #' @param mask A data frame of seed masks.
