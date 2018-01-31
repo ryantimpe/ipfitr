@@ -1,0 +1,6 @@
+url: http://ryantimpe.github.io/ipfitr
+
+template:
+  params:
+    bootswatch: flatly
+

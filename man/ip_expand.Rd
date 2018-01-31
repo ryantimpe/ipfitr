@@ -11,7 +11,7 @@ ip_expand(targets, target.value.names = "value", names.exclude = c("value"),
   freeze_slice.value.names = "value", minmax_cells = NULL,
   minmax_cells.value.names = c("value_min", "value_max"),
   minmax_slice = NULL, minmax_slice.value.names = c("value_min",
-  "value_max"), minmax.smash.param = 1/3, save.tars = TRUE,
+  "value_max"), minmax.smash.param = 1/3, save.tars = FALSE,
   show.messages = TRUE)
 }
 \arguments{

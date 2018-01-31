@@ -20,4 +20,6 @@ A list of data frames containing individual data frames for use in ip_mask_seed(
 }
 \description{
 Apply a layer of multiplicative masks to a seed. This will apply the mask to seed on all rows that match supplied elements.
+Without changing the original seed, the mask is used to proportionally raise, lower, or zero seed values. This is an easy mechanism for flavoring the seed with research and manual edits.
+The mask is an alternative to line-item changes using \code{mutate()} + \code{if_else()}.
 }

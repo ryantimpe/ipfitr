@@ -2,11 +2,11 @@
 
 [Demo](http://www.ryantimpe.com/files/Intro_to_ipfitr.html)
 
-In market sizing and forecasting, we're often tasked with estimating large data tables with limited, high-level inputs. [Iterative proportion fitting](https://en.wikipedia.org/wiki/Iterative_proportional_fitting) has been used in market analysis for over 30 years. This package integrates the methodology, along with some more sophisticated methods, into the [tidyverse](https://github.com/tidyverse/tidyverse) in R.
+In market sizing and forecasting, we're often tasked with estimating large data tables with limited data or only tables of subtotals. For example, one might know the number of people employed in the a country by age range, as well as the gender breakdown of total employment without age. Using iterative proportion fitting with these two data series, one can estimate the number of people employed by age range AND gender.
 
-The ipfitr package for R allows the user to input multiple high-level summary/aggregate data tables and create a single, full-dimension data table estimating individual cell values using iterative proportion fitting (IPFs).
+[Iterative proportion fitting](https://en.wikipedia.org/wiki/Iterative_proportional_fitting) (IPF) has been used in market analysis for over 30 years. This package integrates the methodology, along with some more expansions of this technique, into the [tidyverse](https://github.com/tidyverse/tidyverse) in R.
 
-The user can also submit must-hit target values or min/max conditions for individual cells or specific slices of the data table. 
+The ipfitr package for R allows the user to input multiple high-level summary/aggregate data tables and create a single, full-dimension data table estimating individual cell values using iterative proportion fitting.
 
 Here's the link to a [webpage with a demo of key features](http://www.ryantimpe.com/files/Intro_to_ipfitr.html). See my [GitHub](https://github.com/ryantimpe/ipfitr) for the script and latest updates. 
 
