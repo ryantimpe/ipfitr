@@ -52,7 +52,7 @@ ip_expand <- function(targets, target.value.names = "value",
                    minmax_cells = NULL, minmax_cells.value.names = c("value_min", "value_max"),
                    minmax_slice = NULL, minmax_slice.value.names = c("value_min", "value_max"),
                    minmax.smash.param = 1/3,
-                   save.tars = TRUE, show.messages = TRUE) {
+                   save.tars = FALSE, show.messages = TRUE) {
 
   df <- ip_create_seed(targets, names.exclude = names.exclude,
                        value.set = value.set, value.name = value.name,
