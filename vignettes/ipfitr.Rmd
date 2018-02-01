@@ -26,39 +26,42 @@ The ipfitr package for R allows the user to input multiple high-level summary/ag
 
 ## Data: Three one-dimensional targets
 
-To explore the function in the ipfitr package, we'll create three simple data frames to use as targets. Each target represents the total money spent at a fairground over the course of the weekend. `tar1` contains the money spent on each item at the fair; `tar2` contains the amount of money spent by each person; and `tar3` contains the daily totals. Note that the total of each of the three targets is equal, representing the total amount of money spent at the fair over the weekend.
+To explore the function in the ipfitr package, we'll use the base R dataset `HairEyeColor` which contains 4 hair colors, 4 eye colors, and 2 genders, along with the number of people who have each of those 32 (4x4x2) combinations.
+
+But for now, let's assume we don't have that much detail. Instead we have 3 tables containing the total number of people with each hair color, total number with each eye color, and total number of each gender.
 
 ```{r targets}
-tar1 <- data.frame(
-  item = c("Attractions", "Balloons", "Candy"),
-  value = c(120, 150, 80),
-  stringsAsFactors = F
-)
+dat_hec <- as.data.frame(HairEyeColor, stringsAsFactors = T)
 
-tar2 <- data.frame(
-  person = c("Abby", "Ben", "Charles", "Dexter"),
-  value = c(70, 90, 110, 80),
-  stringsAsFactors = F
-)
+tar1 <- dat_hec %>% 
+  group_by(Hair) %>% 
+  summarize(value = sum(Freq))
+tar1
 
-tar3 <- data.frame(
-  day = c("Friday", "Saturday", "Sunday"),
-  value = c(100, 150, 100),
-  stringsAsFactors = F
-)
+tar2 <- dat_hec %>% 
+  group_by(Eye) %>% 
+  summarize(value = sum(Freq))
+tar2
+
+tar3 <- dat_hec %>% 
+  group_by(Sex) %>% 
+  summarize(value = sum(Freq))
+tar3
 
 ```
 
+Note that the total number of people in each of the tables is equal. This is an important (but not required) feature of iterative proportion fitting. More on this later.
+
 ## Expanding data with ip_expand()
 
-The ipfitr package can be used to estimate how much money each person spent on each item over each of the days. This takes our 10 data points (3+4+3) and creates 36 data points (3x4x3), while ensuring the 10 target data points remain true.
+The ipfitr package can be used to estimate how many people have each combination of hair color, eye color, and gender. (Remember, we're ignoring the original data frame.) This takes our 10 data points (4+4+2) and creates 32 data points (4x4x2), while ensuring the 10 target data points remain true.
 
 ```{r ip_expand, message=FALSE, warning=FALSE}
 tar_list <- list(tar1, tar2, tar3)
 
 dat_1 <- ip_expand(tar_list)
 
-head(dat_1)
+head(dat_1 %>% mutate_at(vars(value), round))
 
 ```
 
@@ -69,28 +72,32 @@ This is equivalent to running the two functions independently:
 dat_1 <- ip_create_seed(tar_list) %>% ip_fit(tar_list)
 ```
 
+Initializing the seed values at 1 implies that one has no additional information about the relative distribution of the elements in the final output. In this example, the user has no additional information about the distribution of hair color, eye color, and sex, so the IPF distributes the count of people evenly across the seed until the three targets are met.
+
+This doesn't give us the "correct" answer, which is unknown, but does tell us the most likely answer.
+
 ## Seeding the IPF with ip_create_seed()
 
-Initializing the seed values at 1 implies that one has no additional information about the relative distribution of the elements in the final output. In this example, the user has no additional information about the spending by each person on each item during each day of the weekend.
-
-Alternatively, suppose you learn that Abby got her paycheck on Saturday, so most of her spending was on Saturday and Sunday rather than Friday. You can implement this vague piece of information using the seed. This information should impact spending on all items, so we can reduce all seed values for Abby on Friday by 50%.
+Alternatively, suppose we learn that people with blond hair are much more likely to have blue eyes. You can implement this vague piece of information using the seed. This information should impact both females and males, so we increase all seed values for blond hair and blue eyes by a factor of 4.
 
 ```{r ip_create_seed, message=FALSE, warning=FALSE}
 dat_2 <- ip_create_seed(tar_list) %>% 
-  mutate(value = ifelse(person == "Abby" & day == "Friday", 0.5*value, value)) %>% 
+  mutate(value = ifelse(Hair == "Blond" & Eye == "Blue", 4*value, value)) %>% 
   ip_fit(tar_list)
 
-dat_1 %>% filter(person == "Abby",  day == "Friday")
+dat_1 %>% filter(Hair == "Blond",  Eye == "Blue")
 
-dat_2 %>% filter(person == "Abby",  day == "Friday")
+dat_2 %>% filter(Hair == "Blond",  Eye == "Blue")
 
 ```
 
-You'll notice that reducing Abby's seed on Friday by 50% does reduce the final spending estimates, but by less than 50%. The seed informs the intial starting point for Abby's Friday spending compared to her spending on other days, as well as Abby's spending on Friday relative to the other visitors' spending on Friday. From there, the scaling take over, ensuring all the targets are hit.
+Applying this updated seed to the targets changes each of the 32 estimates while still ensuring the three target values are hit.
 
-The seed value do not need to be based around 1 - any non-negative values will work. For example, you could use spending estimates of the fairground attendees from a previous visit as the seed for this visit.
+You'll notice that increasing the seed for blond hair and blue eyes by a factor of 4 increases the output for those elements, but by less than 4x. This change to the seed increases the intial starting point for blond hair for relative to eye colors and then blue eyes compared to all hair colors. From there, the scaling take over, redistributing people assigned to each row until all targets are met.
 
-Any seed values of 0 will remain 0 in the final IPF outputt.
+The seed values do not need to be based around 1 - any non-negative values will work. For example, you could use a completely different data frame with counts of a completely different sample of people by hair color, eye color, and gender if you believe the distributions are similar.
+
+Any seed values of 0 will remain 0 in the final IPF output. For example, if you know for sure that there are no green-eyed, red-haired males in the sample, setting the seed here to 0 will retain that 0 in the final results.
 
 ## Masking the seed with ip_mask_seed()
 
