@@ -122,19 +122,19 @@
     <pre class="examples"><div class='input'><span class='no'>df</span> <span class='kw'>&lt;-</span> <span class='fu'>data.frame</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='no'>letters</span>[<span class='fl'>1</span>:<span class='fl'>2</span>], <span class='fl'>2</span>), <span class='kw'>y</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='fu'>rep</span>(<span class='st'>"c"</span>, <span class='fl'>2</span>), <span class='fu'>rep</span>(<span class='st'>"d"</span>, <span class='fl'>2</span>)), <span class='kw'>value</span> <span class='kw'>=</span> <span class='fu'>runif</span>(<span class='fl'>4</span>))
 <span class='no'>tar1</span> <span class='kw'>&lt;-</span> <span class='fu'>data.frame</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>letters</span>[<span class='fl'>1</span>:<span class='fl'>2</span>], <span class='kw'>value</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='fl'>20</span>, <span class='fl'>30</span>))
 <span class='fu'>ip_scale</span>(<span class='no'>df</span>, <span class='no'>tar1</span>)</div><div class='output co'>#&gt; <span class='message'>Joining, by = "x"</span></div><div class='output co'>#&gt; # A tibble: 4 x 3
-#&gt;   x      y      value
-#&gt;   &lt;fctr&gt; &lt;fctr&gt; &lt;dbl&gt;
-#&gt; 1 a      c      16.3 
-#&gt; 2 b      c      28.9 
-#&gt; 3 a      d       3.69
-#&gt; 4 b      d       1.13</div><div class='input'>
+#&gt;   x     y     value
+#&gt;   &lt;fct&gt; &lt;fct&gt; &lt;dbl&gt;
+#&gt; 1 a     c     16.3 
+#&gt; 2 b     c     28.9 
+#&gt; 3 a     d      3.69
+#&gt; 4 b     d      1.13</div><div class='input'>
 <span class='no'>df</span> <span class='kw'>%&gt;%</span> <span class='fu'>ip_scale</span>(<span class='no'>tar1</span>, <span class='kw'>series_start</span> <span class='kw'>=</span> <span class='st'>"value"</span>, <span class='kw'>series_target</span> <span class='kw'>=</span> <span class='st'>"value"</span>)</div><div class='output co'>#&gt; <span class='message'>Joining, by = "x"</span></div><div class='output co'>#&gt; # A tibble: 4 x 3
-#&gt;   x      y      value
-#&gt;   &lt;fctr&gt; &lt;fctr&gt; &lt;dbl&gt;
-#&gt; 1 a      c      16.3 
-#&gt; 2 b      c      28.9 
-#&gt; 3 a      d       3.69
-#&gt; 4 b      d       1.13</div></pre>
+#&gt;   x     y     value
+#&gt;   &lt;fct&gt; &lt;fct&gt; &lt;dbl&gt;
+#&gt; 1 a     c     16.3 
+#&gt; 2 b     c     28.9 
+#&gt; 3 a     d      3.69
+#&gt; 4 b     d      1.13</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

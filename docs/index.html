@@ -60,40 +60,34 @@
       </header><div class="row">
   <div class="contents col-md-9">
     
-<div id="introduction" class="section level2">
-<h2 class="hasAnchor">
-<a href="#introduction" class="anchor"></a>Introduction</h2>
+<div class="section level2">
+<h2>Introduction</h2>
 
 <p>In market sizing and forecasting, we’re often tasked with estimating large data tables with limited data or only tables of subtotals. For example, one might know the number of people employed in the a country by age range, as well as the gender breakdown of total employment without age. Using iterative proportion fitting with these two data series, one can estimate the number of people employed by age range AND gender.</p>
 <p><a href="https://en.wikipedia.org/wiki/Iterative_proportional_fitting">Iterative proportion fitting</a> (IPF) has been used in market analysis for over 30 years. This package integrates the methodology, along with some more expansions of this technique, into the <a href="https://github.com/tidyverse/tidyverse">tidyverse</a> in R.</p>
 <p>The ipfitr package for R allows the user to input multiple high-level summary/aggregate data tables and create a single, full-dimension data table estimating individual cell values using iterative proportion fitting.</p>
 <p>Here’s the link to a <a href="http://www.ryantimpe.com/files/Intro_to_ipfitr.html">webpage with a demo of key features</a>. See my <a href="https://github.com/ryantimpe/ipfitr">GitHub</a> for the script and latest updates.</p>
 </div>
-<div id="getting-started" class="section level2">
-<h2 class="hasAnchor">
-<a href="#getting-started" class="anchor"></a>Getting Started</h2>
+<div class="section level2">
+<h2>Getting Started</h2>
 <p>The ipfitr package performs iterative proportion fitting on a seed datatable, continuously scaling values to each target until the seed values sum to every supplied target. If no seed is supplied, the function begins with a seed of 1 for every value.</p>
 <p>Changing the seed will result in different final results (see Examples 1a and 2 in <a href="http://www.ryantimpe.com/files/Intro_to_ipfitr.html">the demo</a>). For this reason, it’s best to include as much information as you can about the relative values of the cells in the seed.</p>
-<div id="prerequisites" class="section level3">
-<h3 class="hasAnchor">
-<a href="#prerequisites" class="anchor"></a>Prerequisites</h3>
+<div class="section level3">
+<h3>Prerequisites</h3>
 <p>This package is built using the <a href="https://github.com/tidyverse/tidyverse">tidyverse</a> packages.</p>
 <p>The functions in ipfitr can be run independently, but are more useful as part of a %&gt;% workflow.</p>
 </div>
-<div id="installing" class="section level3">
-<h3 class="hasAnchor">
-<a href="#installing" class="anchor"></a>Installing</h3>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">install.packages</span>(devtools)
-devtools<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/devtools/topics/install_github">install_github</a></span>(<span class="st">"ryantimpe/ipfitr"</span>)</code></pre></div>
+<div class="section level3">
+<h3>Installing</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">install.packages</span>(devtools)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">devtools<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/devtools/topics/install_github">install_github</a></span>(<span class="st">"ryantimpe/ipfitr"</span>)</a></code></pre></div>
 </div>
 </div>
-<div id="deployment" class="section level2">
-<h2 class="hasAnchor">
-<a href="#deployment" class="anchor"></a>Deployment</h2>
+<div class="section level2">
+<h2>Deployment</h2>
 </div>
-<div id="built-with" class="section level2">
-<h2 class="hasAnchor">
-<a href="#built-with" class="anchor"></a>Built With</h2>
+<div class="section level2">
+<h2>Built With</h2>
 <ul>
 <li>
 <a href="https://www.r-project.org/">R</a> - R</li>
@@ -101,14 +95,12 @@ devtools<span class="op">::</span><span class="kw"><a href="http://www.rdocument
 <a href="https://github.com/tidyverse/tidyverse">tidyverse</a> - Tidyverse packages + ggplot2</li>
 </ul>
 </div>
-<div id="versioning" class="section level2">
-<h2 class="hasAnchor">
-<a href="#versioning" class="anchor"></a>Versioning</h2>
+<div class="section level2">
+<h2>Versioning</h2>
 <p>For the versions available, see the <a href="https://github.com/ryantimpe/ipfitr/tags">tags on this repository</a>.</p>
 </div>
-<div id="authors" class="section level2">
-<h2 class="hasAnchor">
-<a href="#authors" class="anchor"></a>Authors</h2>
+<div class="section level2">
+<h2>Authors</h2>
 <ul>
 <li>
 <strong>Ryan Timpe</strong> - <em>Initial work</em> - <a href="https://github.com/ryantimpe">ryantimpe</a>
@@ -118,9 +110,8 @@ devtools<span class="op">::</span><span class="kw"><a href="http://www.rdocument
 </ul>
 <p>See also the list of <a href="https://github.com/ryantimpe/ipfitr/contributors">contributors</a> who participated in this project.</p>
 </div>
-<div id="license" class="section level2">
-<h2 class="hasAnchor">
-<a href="#license" class="anchor"></a>License</h2>
+<div class="section level2">
+<h2>License</h2>
 <p>No license.</p>
 </div>
 

@@ -136,9 +136,7 @@ Leave as <code>NULL</code> if the targets will be run using <code><a href='ip_ex
                    <span class='kw'>value</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='fl'>5</span>, <span class='fl'>10</span>, <span class='fl'>15</span>, <span class='fl'>20</span>, <span class='fl'>0</span>, <span class='fl'>10</span>, <span class='fl'>10</span>, <span class='fl'>10</span>, <span class='fl'>10</span>, <span class='fl'>10</span>))
 
 <span class='no'>tar.list</span> <span class='kw'>&lt;-</span> <span class='fu'>list</span>(<span class='no'>tar1</span>, <span class='no'>tar2</span>, <span class='no'>tar3</span>)
-<span class='fu'>check_targets</span>(<span class='no'>tar.list</span>)</div><div class='output co'>#&gt; <span class='message'>Beginning check... 3 targets provided.</span></div><div class='output co'>#&gt; <span class='message'></span>
-#&gt; <span class='message'>Targets are good! No issues here.</span>
-#&gt; <span class='message'>===================================</span></div><div class='output co'>#&gt; list()</div><div class='input'>
+<span class='fu'>check_targets</span>(<span class='no'>tar.list</span>)</div><div class='output co'>#&gt; <span class='message'>Beginning check... 3 targets provided.</span></div><div class='output co'>#&gt; <span class='error'>Error in UseMethod("filter_"): no applicable method for 'filter_' applied to an object of class "list"</span></div><div class='input'>
 <span class='co'>#This will find errors with the targets</span>
 <span class='no'>tar3b</span> <span class='kw'>&lt;-</span> <span class='fu'>data.frame</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='fu'>rep</span>(<span class='no'>letters</span>[<span class='fl'>1</span>], <span class='fl'>5</span>), <span class='fu'>rep</span>(<span class='no'>letters</span>[<span class='fl'>2</span>], <span class='fl'>5</span>)),
                    <span class='kw'>z</span> <span class='kw'>=</span> <span class='fu'>rep</span>(<span class='no'>letters</span>[<span class='fl'>6</span>:<span class='fl'>10</span>], <span class='fl'>2</span>),
@@ -146,48 +144,10 @@ Leave as <code>NULL</code> if the targets will be run using <code><a href='ip_ex
 
 <span class='no'>tar.list</span> <span class='kw'>&lt;-</span> <span class='fu'>list</span>(<span class='no'>tar1</span>, <span class='no'>tar2</span>, <span class='no'>tar3b</span>)
 <span class='no'>seed</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>ipfitr</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/ipfitr/topics/ip_create_seed'>ip_create_seed</a></span>(<span class='no'>tar.list</span>)
-<span class='fu'>check_targets</span>(<span class='no'>tar.list</span>, <span class='no'>seed</span>)</div><div class='output co'>#&gt; <span class='message'>Beginning check... 3 targets provided, as well as a seed.</span></div><div class='output co'>#&gt; <span class='message'></span>
-#&gt; <span class='message'>At least one violation has been found within the targets. See output.</span>
-#&gt; <span class='message'>===================================</span></div><div class='output co'>#&gt; <span class='message'>Checking each target against the seed... This will look for 0 or NA values over seed subtotals and compare them with the targets.</span>
-#&gt; <span class='message'>If the seed has a 0 subtotal, then the matching target should also be 0 (IPF cannot scale zero to a non-zero).</span></div><div class='output co'>#&gt; <span class='message'></span>
-#&gt; <span class='message'>The seed and targets line up! No issues here.</span>
-#&gt; <span class='message'>===================================</span></div><div class='output co'>#&gt; $`Tar1  &amp;  Tar3`
-#&gt; # A tibble: 1 x 4
-#&gt;   x       Tar1  Tar3 Check_value
-#&gt;   &lt;fctr&gt; &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;
-#&gt; 1 a       50.0  45.0        5.00
-#&gt; 
-#&gt; $`Tar2  &amp;  Tar3`
-#&gt; # A tibble: 1 x 3
-#&gt;    Tar2  Tar3 Check_value
-#&gt;   &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;
-#&gt; 1   100  95.0        5.00
-#&gt; </div><div class='input'>
+<span class='fu'>check_targets</span>(<span class='no'>tar.list</span>, <span class='no'>seed</span>)</div><div class='output co'>#&gt; <span class='message'>Beginning check... 3 targets provided, as well as a seed.</span></div><div class='output co'>#&gt; <span class='error'>Error in UseMethod("filter_"): no applicable method for 'filter_' applied to an object of class "list"</span></div><div class='input'>
 <span class='co'>#This will find errors with the targets and the seed</span>
 <span class='no'>seed2</span> <span class='kw'>&lt;-</span> <span class='no'>seed</span> <span class='kw'>%&gt;%</span> <span class='fu'>mutate</span>(<span class='kw'>value</span> <span class='kw'>=</span> <span class='fu'>ifelse</span>(<span class='no'>x</span> <span class='kw'>==</span> <span class='st'>"a"</span> <span class='kw'>&amp;</span> <span class='no'>z</span> <span class='kw'>==</span> <span class='st'>"g"</span>, <span class='fl'>0</span>, <span class='no'>value</span>))
-<span class='fu'>check_targets</span>(<span class='no'>tar.list</span>, <span class='no'>seed2</span>)</div><div class='output co'>#&gt; <span class='message'>Beginning check... 3 targets provided, as well as a seed.</span></div><div class='output co'>#&gt; <span class='message'></span>
-#&gt; <span class='message'>At least one violation has been found within the targets. See output.</span>
-#&gt; <span class='message'>===================================</span></div><div class='output co'>#&gt; <span class='message'>Checking each target against the seed... This will look for 0 or NA values over seed subtotals and compare them with the targets.</span>
-#&gt; <span class='message'>If the seed has a 0 subtotal, then the matching target should also be 0 (IPF cannot scale zero to a non-zero).</span></div><div class='output co'>#&gt; <span class='message'></span>
-#&gt; <span class='message'>!!! Zero subtotals found in seed where targets have values. IPF will not converge. See output.</span>
-#&gt; <span class='message'>===================================</span></div><div class='output co'>#&gt; $`Tar1  &amp;  Tar3`
-#&gt; # A tibble: 1 x 4
-#&gt;   x       Tar1  Tar3 Check_value
-#&gt;   &lt;fctr&gt; &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;
-#&gt; 1 a       50.0  45.0        5.00
-#&gt; 
-#&gt; $`Tar2  &amp;  Tar3`
-#&gt; # A tibble: 1 x 3
-#&gt;    Tar2  Tar3 Check_value
-#&gt;   &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;
-#&gt; 1   100  95.0        5.00
-#&gt; 
-#&gt; $`Tar3 &amp; Seed`
-#&gt; # A tibble: 1 x 4
-#&gt;   x     z     .seed .target
-#&gt;   &lt;chr&gt; &lt;chr&gt; &lt;dbl&gt;   &lt;dbl&gt;
-#&gt; 1 a     g         0    10.0
-#&gt; </div><div class='input'>
+<span class='fu'>check_targets</span>(<span class='no'>tar.list</span>, <span class='no'>seed2</span>)</div><div class='output co'>#&gt; <span class='message'>Beginning check... 3 targets provided, as well as a seed.</span></div><div class='output co'>#&gt; <span class='error'>Error in UseMethod("filter_"): no applicable method for 'filter_' applied to an object of class "list"</span></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
