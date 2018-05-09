@@ -94,7 +94,7 @@ check_targets <- function(targets, seed = NULL,
         group_by_(.dots = as.list(c(".dftype", common.dims))) %>%
         summarize(TarA = sum(.value, na.rm=TRUE)) %>%
         ungroup() %>%
-        left_join(
+        full_join(
           TarB %>%
             mutate(.dftype = "Checker")  %>%
             group_by_(.dots = as.list(c(".dftype", common.dims))) %>%
@@ -119,10 +119,15 @@ check_targets <- function(targets, seed = NULL,
     target.checks.names <- tar.combo %>% mutate(.name = paste(TarA, " & ", TarB)) %>% pull
     names(target.checks) <- target.checks.names
 
+    #Look for targets with values in some but not others
+    target.unmatched.op <- target.checks %>%
+      filter(is.na(TarA) | is.na(TarB)) %>%
+      mutate(Check_trigger = TRUE)
+
     #Only keep dfs with violations
     target.checks.op <- target.checks[purrr::map_lgl(target.checks, function(x){any(x$Check_trigger, na.rm=TRUE)})]
 
-    if(length(target.checks.op) == 0) {
+    if(length(target.checks.op) == 0 && length(target.unmatched.op) == 0) {
       message("\nTargets are good! No issues here.\n===================================")
     } else {
       message("\nAt least one violation has been found within the targets. See output.\n===================================")
@@ -151,6 +156,8 @@ check_targets <- function(targets, seed = NULL,
         summarize(.seed = sum(.value, na.rm = TRUE)) %>%
         ungroup() %>%
         left_join(TarA %>% mutate_if(is.factor, as.character), by = dims.in.tar) %>%
+        mutate(.seed = round(.seed, 3),
+               .target = round(.target, 3)) %>%
         mutate(Check_trigger = (.seed == 0 | is.na(.seed)) & (.target > 0 | !is.na(.target)))
 
     }
@@ -171,7 +178,7 @@ check_targets <- function(targets, seed = NULL,
 
   } #End seed check
 
-  check.op <- purrr::map(c(target.checks.op, seed.checks.op), function(x){
+  check.op <- purrr::map(c(target.checks.op, target.unmatched.op, seed.checks.op), function(x){
     x %>% filter(Check_trigger) %>% select(-Check_trigger)
   })
 
