@@ -101,5 +101,36 @@ Any seed values of 0 will remain 0 in the final IPF output. For example, if you 
 
 ## Masking the seed with ip_mask_seed()
 
+In some cases, you will want to make many edits to the seed and using `mutate()` + `ifelse()` can become burdensome. As an alternative, you can use `ip_mask_seed()`. See [this vignette](ip_mask_seed.html) for more detail.
+
 ## Implementing specific information with ip_fit()
 
+The seed informs the starting "best guess" of the distribution of people by the three series. Alternatively, you may start out knowing the "true" value for one or more of the full combinations. For example, suppose you had external information telling you that there are 66 brown-haired, brown-eyed females in your sample, as well as 5 blond hazel-eyed females. 
+
+The final output of `ip_fit()` will need to reflect this information, while also considering the seed and the target subtotals. In this case, we will "freeze" the output for those two new datapoints.
+```{r freeze_cells_prep, include=FALSE}
+
+frz.cells <- tibble(Hair = c("Brown", "Blond"), Eye = c("Brown", "Hazel"),
+                        Sex = c("Female", "Female"), value = c(66, 5))
+
+```
+
+```{r freeze_cells, message=FALSE, warning=FALSE}
+
+frz.cells
+
+dat_3 <- ip_create_seed(tar_list) %>% 
+  mutate(value = ifelse(Hair == "Blond" & Eye == "Blue", 4*value, value)) %>% 
+  ip_fit(tar_list, freeze_cells = frz.cells)
+
+#> Previous output
+dat_2 %>% filter((Hair == "Brown" &  Eye == "Brown" & Sex == "Female") |
+                 (Hair == "Blond" &  Eye == "Hazel" & Sex == "Female"))
+
+#> New Output with Frozen cells
+dat_3 %>% filter((Hair == "Brown" &  Eye == "Brown" & Sex == "Female") |
+                 (Hair == "Blond" &  Eye == "Hazel" & Sex == "Female"))
+
+```
+
+Similar options are available for cases when you have incomplete targets or only know the approximate ranges of subsets of the data. See the [freeze vignette](freeze.html) or the [min/max vignette](minmax.html) for more detail.
