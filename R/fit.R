@@ -76,7 +76,7 @@ ip_fit <- function(datatable, targets,
     target.checker[i] <- sum(x[, target.value.names], na.rm=T)
   }
   if(length(unique(round(target.checker, 4))) > 1){
-    message("Warning: Supplied targets do not have the same totals. IPF will not converge.")
+    message("Warning: Supplied targets do not have the same totals. IPF may not converge.")
   }
 
   #Set initial conditions
