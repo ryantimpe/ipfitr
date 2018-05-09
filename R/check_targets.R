@@ -104,7 +104,8 @@ check_targets <- function(targets, seed = NULL,
         ) %>%
         mutate(Check_value = (TarA - TarB),
                Check_trigger = abs(Check_value) > max.error,
-               Check_trigger = ifelse(is.na(Check_trigger), FALSE, Check_trigger)) %>%
+               Check_trigger = ifelse(is.na(Check_trigger), FALSE, Check_trigger),
+               Mismatch_trigger = is.na(TarA) | is.na(TarB)) %>%
         select(-.dftype)
 
       names(combo.tar)[names(combo.tar) == "TarA"] <- tara
@@ -119,15 +120,13 @@ check_targets <- function(targets, seed = NULL,
     target.checks.names <- tar.combo %>% mutate(.name = paste(TarA, " & ", TarB)) %>% pull
     names(target.checks) <- target.checks.names
 
-    #Look for targets with values in some but not others
-    target.unmatched.op <- target.checks %>%
-      filter(is.na(TarA) | is.na(TarB)) %>%
-      mutate(Check_trigger = TRUE)
-
     #Only keep dfs with violations
     target.checks.op <- target.checks[purrr::map_lgl(target.checks, function(x){any(x$Check_trigger, na.rm=TRUE)})]
 
-    if(length(target.checks.op) == 0 && length(target.unmatched.op) == 0) {
+    #Look for targets with values in some but not others
+    target.mismatch.op <- target.checks[purrr::map_lgl(target.checks, function(x){any(x$Mismatch_trigger, na.rm=TRUE)})]
+
+    if(length(target.checks.op) == 0 && length(target.mismatch.op) == 0) {
       message("\nTargets are good! No issues here.\n===================================")
     } else {
       message("\nAt least one violation has been found within the targets. See output.\n===================================")
@@ -178,8 +177,8 @@ check_targets <- function(targets, seed = NULL,
 
   } #End seed check
 
-  check.op <- purrr::map(c(target.checks.op, target.unmatched.op, seed.checks.op), function(x){
-    x %>% filter(Check_trigger) %>% select(-Check_trigger)
+  check.op <- purrr::map(c(target.checks.op, target.mismatch.op, seed.checks.op), function(x){
+    x %>% filter(Check_trigger | Mismatch_trigger) %>% select(-Check_trigger, -Mismatch_trigger)
   })
 
   return(check.op)
