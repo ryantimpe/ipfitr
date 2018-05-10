@@ -154,10 +154,11 @@ check_targets <- function(targets, seed = NULL,
         group_by_(.dots = as.list(dims.in.tar)) %>%
         summarize(.seed = sum(.value, na.rm = TRUE)) %>%
         ungroup() %>%
-        left_join(TarA %>% mutate_if(is.factor, as.character), by = dims.in.tar) %>%
+        full_join(TarA %>% mutate_if(is.factor, as.character), by = dims.in.tar) %>%
         mutate(.seed = round(.seed, 3),
                .target = round(.target, 3)) %>%
-        mutate(Check_trigger = (.seed == 0 | is.na(.seed)) & (.target > 0 | !is.na(.target)))
+        mutate(Check_trigger = (.seed == 0 | is.na(.seed)) & (.target > 0 | !is.na(.target)),
+               Mismatch_trigger = is.na(.seed) | is.na(.target))
 
     }
 
@@ -167,9 +168,10 @@ check_targets <- function(targets, seed = NULL,
 
     #Only keep dfs with violations
     seed.checks.op <- seed.checks[purrr::map_lgl(seed.checks, function(x){any(x$Check_trigger)})]
+    seed.mismatch.op <- seed.checks[purrr::map_lgl(seed.checks, function(x){any(x$Mismatch_trigger)})]
 
     #Output message
-    if(length(seed.checks.op) == 0){
+    if(length(seed.checks.op) == 0 && length(seed.mismatch.op) == 0){
       message("\nThe seed and targets line up! No issues here.\n===================================")
     } else {
       message("\n!!! Zero subtotals found in seed where targets have values. IPF will not converge. See output.\n===================================")
