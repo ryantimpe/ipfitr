@@ -4,8 +4,8 @@
 \alias{ip_miss}
 \title{Compare data frame to target subtotals and calculate absolute error.}
 \usage{
-ip_miss(datatable, target, series_start = "value", series_target = "value",
-  series_type = "tar")
+ip_miss(datatable, target, series_start = "value",
+  series_target = "value", series_type = "tar")
 }
 \arguments{
 \item{datatable}{A data frame of values previously scaled to targets.}

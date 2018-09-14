@@ -4,7 +4,8 @@
 \alias{ip_scale}
 \title{Single target scale function calling external dataframe.}
 \usage{
-ip_scale(datatable, target, series_start = "value", series_target = "value")
+ip_scale(datatable, target, series_start = "value",
+  series_target = "value")
 }
 \arguments{
 \item{datatable}{A dataframe of values to be scaled to target.}

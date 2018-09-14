@@ -5,14 +5,14 @@
 \title{Iterative proportional fitting to scale seed values to multiple target subtotals.}
 \usage{
 ip_fit(datatable, targets, datatable.value.name = "value",
-  target.value.names = "value", max.error = 0.01, max.iterations = 25,
-  freeze_cells = NULL, freeze_cells.value.name = "value",
-  freeze_slice = NULL, freeze_slice.value.names = "value",
-  minmax_cells = NULL, minmax_cells.value.names = c("value_min",
-  "value_max"), minmax_slice = NULL,
-  minmax_slice.value.names = c("value_min", "value_max"),
-  minmax.smash.param = 1/3, growth_targets = NULL, save.tars = FALSE,
-  show.messages = TRUE)
+  target.value.names = "value", max.error = 0.01,
+  max.iterations = 25, freeze_cells = NULL,
+  freeze_cells.value.name = "value", freeze_slice = NULL,
+  freeze_slice.value.names = "value", minmax_cells = NULL,
+  minmax_cells.value.names = c("value_min", "value_max"),
+  minmax_slice = NULL, minmax_slice.value.names = c("value_min",
+  "value_max"), minmax.smash.param = 1/3, growth_targets = NULL,
+  save.tars = FALSE, show.messages = TRUE)
 }
 \arguments{
 \item{datatable}{A data frame of values to be scaled to targets.}

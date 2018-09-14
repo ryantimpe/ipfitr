@@ -4,11 +4,12 @@
 \alias{ip_fit_sl}
 \title{Iterative proportional fitting to scale seed values to multiple target subtotals.}
 \usage{
-ip_fit_sl(datatable, targets, assumptions, datatable.value.name = "value",
-  target.value.names = "value", assumption.value.names = c("value",
-  "value_min", "value_max"), assumption.drop.names = c("Notes"),
-  max.error = 0.01, max.iterations = 25, minmax.smash.param = 1/3,
-  save.tars = FALSE, show.messages = TRUE)
+ip_fit_sl(datatable, targets, assumptions,
+  datatable.value.name = "value", target.value.names = "value",
+  assumption.value.names = c("value", "value_min", "value_max"),
+  assumption.drop.names = c("Notes"), max.error = 0.01,
+  max.iterations = 25, minmax.smash.param = 1/3, save.tars = FALSE,
+  show.messages = TRUE)
 }
 \arguments{
 \item{datatable}{A data frame of values to be scaled to targets.}

@@ -5,7 +5,8 @@
 \title{Scale data frame values to match share targets over any series}
 \usage{
 ip_shares_transform(datatable, target, series_start = "value",
-  series_target = "share", series_share_of = "share__of", sep = " + ")
+  series_target = "share", series_share_of = "share__of",
+  sep = " + ")
 }
 \arguments{
 \item{datatable}{A data frame of values.}

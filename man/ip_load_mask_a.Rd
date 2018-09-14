@@ -4,7 +4,8 @@
 \alias{ip_load_mask_a}
 \title{Convert a data frame of seed masks to individual data frames}
 \usage{
-ip_load_mask_a(mask_raw, mask.value.name = "mask", drop.names = c("Notes"))
+ip_load_mask_a(mask_raw, mask.value.name = "mask",
+  drop.names = c("Notes"))
 }
 \arguments{
 \item{mask_raw}{A data frame of seed masks.}

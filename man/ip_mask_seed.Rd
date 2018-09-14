@@ -4,7 +4,8 @@
 \alias{ip_mask_seed}
 \title{Apply a layer of multiplicative masks to a seed.}
 \usage{
-ip_mask_seed(seed, mask, mask.value.name = "mask", drop.names = c("Notes"))
+ip_mask_seed(seed, mask, mask.value.name = "mask",
+  drop.names = c("Notes"))
 }
 \arguments{
 \item{seed}{A seed data frame, either supplied by the user or created using \code{ip_create_seed()}.}
