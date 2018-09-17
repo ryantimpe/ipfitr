@@ -2,6 +2,7 @@
 
 export(check_targets)
 export(ia_cast)
+export(ia_scale)
 export(ip_backcast)
 export(ip_create_seed)
 export(ip_expand)
