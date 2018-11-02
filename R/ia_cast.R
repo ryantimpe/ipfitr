@@ -9,6 +9,10 @@
 ip_backcast <- function(datatable, series_target = "value", series_base = "value_base",
                         growth_over = c("Year")) {
 
+  warning(
+    "The function 'ip_backcast' is deprecated. Please use 'ia_cast()' inside a dplyr::mutate() statement."
+  )
+
   names(datatable)[names(datatable) == series_target] <- ".srs_targ"
   names(datatable)[names(datatable) == series_base]   <- ".srs_base"
 
@@ -66,8 +70,11 @@ ia_cast <- function(target, cast_source, cast_source_metric = "level",
   }
 
   #Check direction
-  if(!(direction %in% c("forward", "backward"))){
-    stop("direction must either be 'forward' or 'backward'")
+  if(!(direction %in% c("forward", "backward", "both"))){
+    stop("direction must either be 'forward', 'backward', or 'both'")
+  }
+  if(direction == "both" && is.null(base_index)){
+    stop("if direction = 'both', a base index must be supplied.")
   }
 
   #Index of target to apply the cast
@@ -99,9 +106,10 @@ ia_cast <- function(target, cast_source, cast_source_metric = "level",
 
   bs_cast <- bs_value * sr_metric_norm
 
-  tar_out <- case_when(
+  tar_out <- dplyr::case_when(
     direction == "forward"  ~  c(target[1:bs_index], bs_cast[(bs_index+1):length(bs_cast)]),
-    direction == "backward" ~  c(bs_cast[1:(bs_index-1)], target[bs_index:length(target)])
+    direction == "backward" ~  c(bs_cast[1:(bs_index-1)], target[bs_index:length(target)]),
+    direction == "both"     ~  bs_cast
   )
 
   return(tar_out)
