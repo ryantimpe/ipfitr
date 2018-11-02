@@ -48,7 +48,7 @@ ip_backcast <- function(datatable, series_target = "value", series_base = "value
 #' @param target Vector of values to be fore- or backcast.
 #' @param cast_source Vector of values or growth rates to be applied to \code{target} as a cast. \code{cast_source[1]} aligns with \code{target[1]}. Must be same length as \code{target}
 #' @param cast_source_metric 'level' to apply calculated from rates from \code{cast_source}. 'growth_rate' to use \code{cast_source[1]} as is.
-#' @param direction 'forward' to forecast from \code{base_index} or 'backward' to backcast from  \code{base_index}.
+#' @param direction Use 'forward' to forecast from \code{base_index} or 'backward' to backcast from  \code{base_index}, preserving original values in opposite direction. Use 'both' to cast in both directions from \code{base_index}.
 #' @param base_index Optional index to begin cast in \code{target}. Otherwise first/last non-NA value will be used
 #' @return An array of same length as \code{target} with backcast values.
 #' @examples

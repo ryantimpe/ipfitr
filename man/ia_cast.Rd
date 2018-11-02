@@ -14,7 +14,7 @@ ia_cast(target, cast_source, cast_source_metric = "level",
 
 \item{cast_source_metric}{'level' to apply calculated from rates from \code{cast_source}. 'growth_rate' to use \code{cast_source[1]} as is.}
 
-\item{direction}{'forward' to forecast from \code{base_index} or 'backward' to backcast from  \code{base_index}.}
+\item{direction}{Use 'forward' to forecast from \code{base_index} or 'backward' to backcast from  \code{base_index}, preserving original values in opposite direction. Use 'both' to cast in both directions from \code{base_index}.}
 
 \item{base_index}{Optional index to begin cast in \code{target}. Otherwise first/last non-NA value will be used}
 }
