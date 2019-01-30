@@ -7,7 +7,7 @@ Depends:
     purrr (>= 0.2.4),
     magrittr (>= 1.5),
     tibble (>= 1.4.0)
-Version: 0.0.0.9213
+Version: 0.0.0.9300
 Author: Ryan Timpe <ryan.timpe at gmail.com>
 Authors@R: c(
     person("Ryan", "Timpe", email = "ryan.timpe@gmail.com", role = c("aut", "cre")),
